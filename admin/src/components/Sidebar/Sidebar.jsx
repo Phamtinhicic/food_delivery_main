@@ -19,6 +19,10 @@ const Sidebar = () => {
           <img src={assets.order_icon} alt="" />
           <p>Orders</p>
         </NavLink>
+        <NavLink to='/users' className="sidebar-option">
+          <span style={{ fontSize: '20px' }}>👥</span>
+          <p>Users</p>
+        </NavLink>
       </div>
     </div>
   )
