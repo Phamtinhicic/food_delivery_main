@@ -74,4 +74,75 @@ const registerUser = async (req, res) => {
   }
 };
 
-export { loginUser, registerUser };
+// create user by admin (admin-only)
+const createUserByAdmin = async (req, res) => {
+  const { name, email, password, role } = req.body;
+  try {
+    // only admin can create users here (we expect auth middleware to set req.body.userId)
+    const adminUser = await userModel.findById(req.body.userId);
+    if (!adminUser || adminUser.role !== 'admin') {
+      return res.json({ success: false, message: 'You are not admin' });
+    }
+
+    const exists = await userModel.findOne({ email });
+    if (exists) {
+      return res.json({ success: false, message: 'User already exists' });
+    }
+
+    if (!validator.isEmail(email)) {
+      return res.json({ success: false, message: 'Please enter valid email' });
+    }
+    if (password.length < 8) {
+      return res.json({ success: false, message: 'Please enter strong password' });
+    }
+
+    const salt = await bcrypt.genSalt(Number(process.env.SALT));
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const newUser = new userModel({
+      name: name,
+      email: email,
+      password: hashedPassword,
+      role: role || 'user',
+    });
+
+    await newUser.save();
+    res.json({ success: true, message: 'User created' });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: 'Error' });
+  }
+};
+
+// list all users (admin-only)
+const listAllUsers = async (req, res) => {
+  try {
+    const adminUser = await userModel.findById(req.body.userId);
+    if (!adminUser || adminUser.role !== 'admin') {
+      return res.json({ success: false, message: 'You are not admin' });
+    }
+    const users = await userModel.find({}).select('-password');
+    res.json({ success: true, data: users });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: 'Error' });
+  }
+};
+
+// delete user (admin-only)
+const deleteUserByAdmin = async (req, res) => {
+  try {
+    const adminUser = await userModel.findById(req.body.userId);
+    if (!adminUser || adminUser.role !== 'admin') {
+      return res.json({ success: false, message: 'You are not admin' });
+    }
+    const { id } = req.body;
+    await userModel.findByIdAndDelete(id);
+    res.json({ success: true, message: 'User deleted' });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: 'Error' });
+  }
+};
+
+export { loginUser, registerUser, createUserByAdmin, listAllUsers, deleteUserByAdmin };
