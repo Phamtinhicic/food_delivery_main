@@ -1,6 +1,6 @@
 import express from "express";
 import authMiddleware from "../middleware/auth.js";
-import { listOrders, placeOrder, updateStatus, userOrders, verifyOrder, captureStripeSession } from "../controllers/orderController.js";
+import { listOrders, placeOrder, updateStatus, userOrders, verifyOrder, captureStripeSession, cancelOrder, confirmDelivery } from "../controllers/orderController.js";
 
 const orderRouter = express.Router();
 
@@ -25,6 +25,8 @@ orderRouter.post("/place-test",authMiddleware, async (req, res) => {
 orderRouter.post("/verify",verifyOrder);
 orderRouter.post("/capture", captureStripeSession);
 orderRouter.post("/status",authMiddleware,updateStatus);
+orderRouter.post("/cancel",authMiddleware,cancelOrder);
+orderRouter.post("/confirm-delivery",authMiddleware,confirmDelivery);
 orderRouter.post("/userorders",authMiddleware,userOrders);
 orderRouter.get("/list",authMiddleware,listOrders);
 

@@ -20,7 +20,7 @@ const OrderManagement = ({ url }) => {
   const fetchOrders = async () => {
     if (!token) return;
     try {
-      const response = await axios.post(`${url}/api/order/list`, {}, {
+      const response = await axios.get(`${url}/api/order/list`, {
         headers: { token }
       });
       if (response.data.success) {
@@ -98,7 +98,7 @@ const OrderManagement = ({ url }) => {
 
   // Handle ready for delivery
   const handleReadyOrder = (orderId) => {
-    updateOrderStatus(orderId, 'Delivering');
+    updateOrderStatus(orderId, 'Out for delivery');
   };
 
   // Handle cancel order
@@ -118,6 +118,8 @@ const OrderManagement = ({ url }) => {
       const response = await axios.post(`${url}/api/order/cancel`, {
         orderId: selectedOrder._id,
         reason: cancelReason
+      }, {
+        headers: { token }
       });
 
       if (response.data.success) {
@@ -127,6 +129,8 @@ const OrderManagement = ({ url }) => {
         setCancelReason('');
         setSelectedOrder(null);
         stopNotificationSound();
+      } else {
+        toast.error(response.data.message || 'Lỗi khi hủy đơn');
       }
     } catch (error) {
       toast.error('Lỗi khi hủy đơn hàng');
@@ -147,9 +151,9 @@ const OrderManagement = ({ url }) => {
 
   // Group orders by status
   const groupedOrders = {
-    Pending: orders.filter(o => o.status === 'Pending'),
-    Preparing: orders.filter(o => o.status === 'Preparing' || o.status === 'Food Processing'),
-    Delivering: orders.filter(o => o.status === 'Delivering' || o.status === 'Out for delivery'),
+    Pending: orders.filter(o => o.status === 'Food Processing'),
+    Preparing: orders.filter(o => o.status === 'Preparing'),
+    Delivering: orders.filter(o => o.status === 'Out for delivery'),
     Completed: orders.filter(o => o.status === 'Delivered'),
     Cancelled: orders.filter(o => o.status === 'Cancelled')
   };
@@ -216,33 +220,42 @@ const OrderManagement = ({ url }) => {
         </div>
 
         <div className="order-actions">
-          {order.status === 'Pending' && (
+          {order.status === 'Food Processing' && (
             <>
               <button
                 className="btn-action btn-confirm"
                 onClick={() => handleConfirmOrder(order._id)}
                 disabled={loading}
               >
-                ✓ Xác nhận
+                ✓ Xác nhận đơn hàng
               </button>
               <button
                 className="btn-action btn-cancel"
                 onClick={() => handleCancelClick(order)}
                 disabled={loading}
               >
-                ✕ Hủy
+                ✕ Hủy đơn
               </button>
             </>
           )}
           
-          {(order.status === 'Preparing' || order.status === 'Food Processing') && (
-            <button
-              className="btn-action btn-ready"
-              onClick={() => handleReadyOrder(order._id)}
-              disabled={loading}
-            >
-              🚚 Sẵn sàng giao
-            </button>
+          {order.status === 'Preparing' && (
+            <>
+              <button
+                className="btn-action btn-ready"
+                onClick={() => handleReadyOrder(order._id)}
+                disabled={loading}
+              >
+                🚚 Sẵn sàng giao hàng
+              </button>
+              <button
+                className="btn-action btn-cancel"
+                onClick={() => handleCancelClick(order)}
+                disabled={loading}
+              >
+                ✕ Hủy đơn
+              </button>
+            </>
           )}
         </div>
       </div>

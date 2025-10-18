@@ -29,7 +29,7 @@ const Dashboard = ({ url }) => {
       setLoading(true);
       
       // Fetch orders
-      const ordersResponse = await axios.post(`${url}/api/order/list`, {}, {
+      const ordersResponse = await axios.get(`${url}/api/order/list`, {
         headers: { token }
       });
       if (ordersResponse.data.success) {

@@ -144,7 +144,59 @@ const updateStatus = async (req, res) => {
   }
 };
 
-export { placeOrder, verifyOrder, userOrders, listOrders, updateStatus };
+// api for cancelling order with reason (admin and restaurant can cancel)
+const cancelOrder = async (req, res) => {
+  try {
+    const userData = await userModel.findById(req.body.userId);
+    if (userData && (userData.role === "admin" || userData.role === "restaurant")) {
+      await orderModel.findByIdAndUpdate(req.body.orderId, {
+        status: "Cancelled",
+        cancelReason: req.body.reason || "No reason provided",
+        cancelledAt: new Date(),
+        cancelledBy: userData.role
+      });
+      res.json({ success: true, message: "Order Cancelled Successfully" });
+    } else {
+      res.json({ success: false, message: "You are not authorized" });
+    }
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: "Error" });
+  }
+};
+
+// api for customer to confirm delivery (only for "Out for delivery" orders)
+const confirmDelivery = async (req, res) => {
+  try {
+    const { orderId } = req.body;
+    const order = await orderModel.findById(orderId);
+    
+    if (!order) {
+      return res.json({ success: false, message: "Order not found" });
+    }
+    
+    // Check if order belongs to the user
+    if (order.userId.toString() !== req.body.userId) {
+      return res.json({ success: false, message: "Unauthorized" });
+    }
+    
+    // Check if order is in "Out for delivery" status
+    if (order.status !== "Out for delivery") {
+      return res.json({ success: false, message: "Order is not ready for confirmation" });
+    }
+    
+    // Update to Delivered
+    await orderModel.findByIdAndUpdate(orderId, {
+      status: "Delivered",
+      deliveredAt: new Date()
+    });
+    
+    res.json({ success: true, message: "Order confirmed as delivered" });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: "Error" });
+  }
+};
 
 // Capture Stripe checkout session: verify session id and mark order as paid
 const captureStripeSession = async (req, res) => {
@@ -164,4 +216,4 @@ const captureStripeSession = async (req, res) => {
   }
 };
 
-export { captureStripeSession };
+export { placeOrder, verifyOrder, userOrders, listOrders, updateStatus, cancelOrder, confirmDelivery, captureStripeSession };

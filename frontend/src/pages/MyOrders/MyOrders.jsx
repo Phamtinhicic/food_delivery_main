@@ -19,6 +19,25 @@ const MyOrders = () => {
     }
   };
 
+  const confirmDelivery = async (orderId) => {
+    try {
+      const response = await axios.post(
+        url + "/api/order/confirm-delivery",
+        { orderId },
+        { headers: { token } }
+      );
+      if (response.data.success) {
+        alert("Xác nhận đã nhận hàng thành công!");
+        fetchOrders(); // Reload orders
+      } else {
+        alert(response.data.message || "Không thể xác nhận");
+      }
+    } catch (error) {
+      console.error("Error confirming delivery:", error);
+      alert("Lỗi khi xác nhận nhận hàng");
+    }
+  };
+
   useEffect(() => {
     if (token) {
       fetchOrders();
@@ -47,7 +66,13 @@ const MyOrders = () => {
                 <span>&#x25cf;</span>
                 <b> {order.status}</b>
               </p>
-              <button onClick={fetchOrders}>Track Order</button>
+              {order.status === "Out for delivery" ? (
+                <button onClick={() => confirmDelivery(order._id)}>
+                  Xác nhận đã nhận hàng
+                </button>
+              ) : (
+                <button onClick={fetchOrders}>Track Order</button>
+              )}
             </div>
           );
         })}
