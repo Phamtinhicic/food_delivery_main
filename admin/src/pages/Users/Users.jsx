@@ -103,8 +103,10 @@ const Users = ({ url }) => {
   };
 
   useEffect(() => {
-    fetchAllUsers();
-  }, []);
+    if (token) {
+      fetchAllUsers();
+    }
+  }, [token]);
 
   const getRoleBadgeClass = (role) => {
     switch(role) {
@@ -164,6 +166,16 @@ const Users = ({ url }) => {
           <b>Created</b>
           <b>Action</b>
         </div>
+        {!token && (
+          <div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
+            ⚠️ Vui lòng đăng nhập để xem danh sách users
+          </div>
+        )}
+        {token && users.length === 0 && (
+          <div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
+            📭 Chưa có user nào. Hãy tạo tài khoản mới!
+          </div>
+        )}
         {users.map((user, index) => (
           <div key={index} className='users-table-row'>
             <p className="user-icon">{getRoleIcon(user.role)}</p>
