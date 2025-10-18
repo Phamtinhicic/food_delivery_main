@@ -100,6 +100,35 @@
   color: #6b7280;
 }
 
+.navbar-logout,
+.navbar-login {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.navbar-logout {
+  background: #ef4444;
+  color: white;
+}
+
+.navbar-logout:hover {
+  background: #dc2626;
+}
+
+.navbar-login {
+  background: #2563eb;
+  color: white;
+}
+
+.navbar-login:hover {
+  background: #1d4ed8;
+}
+
 @media (max-width: 768px) {
   .navbar-title {
     display: none;

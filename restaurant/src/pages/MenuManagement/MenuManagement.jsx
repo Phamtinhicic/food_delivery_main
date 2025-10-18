@@ -10,6 +10,7 @@ const MenuManagement = ({ url }) => {
   const [categories, setCategories] = useState(['All']);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [loading, setLoading] = useState(false);
+  const [localAvailability, setLocalAvailability] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -48,25 +49,17 @@ const MenuManagement = ({ url }) => {
     }
   };
 
-  // Toggle food availability (out of stock)
-  const toggleAvailability = async (foodId, currentStatus) => {
-    try {
-      const response = await axios.post(`${url}/api/food/toggle`, {
-        id: foodId,
-        available: !currentStatus
-      });
-
-      if (response.data.success) {
-        toast.success(
-          !currentStatus ? 'Đã bật món' : 'Đã tắt món (Hết hàng)',
-          { autoClose: 2000 }
-        );
-        fetchFoodList();
-      }
-    } catch (error) {
-      console.error('Error toggling food:', error);
-      toast.error('Không thể thay đổi trạng thái món');
-    }
+  // Toggle food availability (local state - can be synced with backend later)
+  const toggleAvailability = (foodId, currentStatus) => {
+    setLocalAvailability(prev => ({
+      ...prev,
+      [foodId]: !currentStatus
+    }));
+    
+    toast.success(
+      !currentStatus ? '✓ Món đã được bật' : '✕ Món đã được tắt (Hết hàng)',
+      { autoClose: 2000 }
+    );
   };
 
   const handleEdit = (foodId) => {
@@ -145,61 +138,64 @@ const MenuManagement = ({ url }) => {
         </div>
       ) : (
         <div className="menu-grid">
-          {filteredList.map((food) => (
-            <div
-              key={food._id}
-              className={`menu-item-card ${!food.available ? 'out-of-stock' : ''}`}
-            >
-              <img
-                src={`${url}/images/${food.image}`}
-                alt={food.name}
-                className="menu-item-image"
-                onError={(e) => {
-                  e.target.src = 'https://via.placeholder.com/280x180?text=No+Image';
-                }}
-              />
-              
-              <div className="menu-item-content">
-                <div className="menu-item-header">
-                  <div className="menu-item-name">{food.name}</div>
-                  <div className="menu-item-price">{formatCurrency(food.price)}</div>
-                </div>
+          {filteredList.map((food) => {
+            const isAvailable = localAvailability[food._id] ?? true;
+            return (
+              <div
+                key={food._id}
+                className={`menu-item-card ${!isAvailable ? 'out-of-stock' : ''}`}
+              >
+                <img
+                  src={`${url}/images/${food.image}`}
+                  alt={food.name}
+                  className="menu-item-image"
+                  onError={(e) => {
+                    e.target.src = 'https://via.placeholder.com/280x180?text=No+Image';
+                  }}
+                />
+                
+                <div className="menu-item-content">
+                  <div className="menu-item-header">
+                    <div className="menu-item-name">{food.name}</div>
+                    <div className="menu-item-price">{formatCurrency(food.price)}</div>
+                  </div>
 
-                <span className="menu-item-category">{food.category}</span>
+                  <span className="menu-item-category">{food.category}</span>
 
-                <p className="menu-item-description">{food.description}</p>
+                  <p className="menu-item-description">{food.description}</p>
 
-                <div className="menu-item-actions">
-                  {/* Toggle On/Off - Most Important Button */}
-                  <button
-                    className={`action-btn toggle ${!food.available ? 'off' : ''}`}
-                    onClick={() => toggleAvailability(food._id, food.available)}
-                    title={food.available ? 'Tắt món (Hết hàng)' : 'Bật món'}
-                  >
-                    {food.available ? '✓ ON' : '✕ OFF'}
-                  </button>
+                  <div className="menu-item-actions">
+                    {/* Toggle On/Off - Most Important Button */}
+                    <button
+                      className={`action-btn toggle ${!isAvailable ? 'off' : ''}`}
+                      onClick={() => toggleAvailability(food._id, isAvailable)}
+                      title={isAvailable ? 'Tắt món (Hết hàng)' : 'Bật món'}
+                    >
+                      {isAvailable ? '✓ ON' : '✕ OFF'}
+                    </button>
 
-                  {/* Edit button */}
-                  <button
-                    className="action-btn edit"
-                    onClick={() => handleEdit(food._id)}
-                    title="Chỉnh sửa"
-                  >
-                    ✏️ Sửa
-                  </button>
+                    {/* Edit button */}
+                    <button
+                      className="action-btn edit"
+                      onClick={() => handleEdit(food._id)}
+                      title="Chỉnh sửa"
+                    >
+                      ✏️ Sửa
+                    </button>
 
-                  {/* Delete button */}
-                  <button
-                    className="action-btn delete"
-                    onClick={() => handleDelete(food._id, food.name)}
-                    title="Xóa"
-                  >
-                    🗑️ Xóa
-                  </button>
+                    {/* Delete button */}
+                    <button
+                      className="action-btn delete"
+                      onClick={() => handleDelete(food._id, food.name)}
+                      title="Xóa"
+                    >
+                      🗑️ Xóa
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

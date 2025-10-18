@@ -1,7 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import './Navbar.css';
+import { useNavigate } from 'react-router-dom';
+import { StoreContext } from '../../context/StoreContext';
 
 const Navbar = () => {
+  const navigate = useNavigate();
+  const { restaurant, setRestaurant, token, setToken } = useContext(StoreContext);
   const [storeOpen, setStoreOpen] = useState(true);
 
   useEffect(() => {
@@ -11,6 +15,14 @@ const Navbar = () => {
       setStoreOpen(JSON.parse(savedStatus));
     }
   }, []);
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("restaurant");
+    setToken("");
+    setRestaurant(false);
+    navigate("/");
+  };
 
   return (
     <div className="navbar">
@@ -32,10 +44,16 @@ const Navbar = () => {
         <div className="navbar-profile">
           <div className="navbar-avatar">👨‍🍳</div>
           <div className="navbar-user-info">
-            <div className="navbar-username">Restaurant Admin</div>
+            <div className="navbar-username">Restaurant Owner</div>
             <div className="navbar-role">Nhà hàng</div>
           </div>
         </div>
+        
+        {restaurant ? (
+          <button className="navbar-logout" onClick={logout}>Đăng xuất</button>
+        ) : (
+          <button className="navbar-login" onClick={() => navigate("/")}>Đăng nhập</button>
+        )}
       </div>
     </div>
   );

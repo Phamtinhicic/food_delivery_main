@@ -14,6 +14,8 @@ import {
 // Import Components
 import Navbar from "./components/Navbar/Navbar";
 import Sidebar from "./components/Sidebar/Sidebar";
+import Login from "./components/Login/Login";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const App = () => {
   // Backend URL - can be configured via environment variable
@@ -27,11 +29,39 @@ const App = () => {
       <div className="app-content">
         <Sidebar />
         <Routes>
-          <Route path="/" element={<Dashboard url={url}/>} />
-          <Route path="/dashboard" element={<Dashboard url={url}/>} />
-          <Route path="/orders" element={<OrderManagement url={url}/>} />
-          <Route path="/menu" element={<MenuManagement url={url}/>} />
-          <Route path="/store" element={<StoreManagement url={url}/>} />
+          <Route path="/" element={<Login url={url}/>} />
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <Dashboard url={url}/>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/orders" 
+            element={
+              <ProtectedRoute>
+                <OrderManagement url={url}/>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/menu" 
+            element={
+              <ProtectedRoute>
+                <MenuManagement url={url}/>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/store" 
+            element={
+              <ProtectedRoute>
+                <StoreManagement url={url}/>
+              </ProtectedRoute>
+            } 
+          />
         </Routes>
       </div>
     </div>
