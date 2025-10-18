@@ -17,14 +17,21 @@ const Users = ({ url }) => {
   const { token } = useContext(StoreContext);
 
   const fetchAllUsers = async () => {
+    if (!token) {
+      console.log('No token available for fetching users');
+      return;
+    }
     try {
-      const headers = token ? { headers: { token } } : {};
-      const response = await axios.get(url + '/api/user/all', headers);
+      const response = await axios.get(url + '/api/user/all', {
+        headers: { token }
+      });
       if (response.data.success) {
         setUsers(response.data.data);
+      } else {
+        console.error('Failed to fetch users:', response.data.message);
       }
     } catch (error) {
-      console.log(error);
+      console.error('Error fetching users:', error);
     }
   };
 
@@ -37,36 +44,52 @@ const Users = ({ url }) => {
   const handleAddUser = async (e) => {
     e.preventDefault();
     
+    if (!token) {
+      toast.error('Vui lòng đăng nhập trước khi tạo tài khoản');
+      return;
+    }
+    
     if (newUser.password.length < 8) {
       toast.error('Mật khẩu phải có ít nhất 8 ký tự');
       return;
     }
 
     try {
-      const headers = token ? { headers: { token } } : {};
-      const response = await axios.post(url + '/api/user/create-by-admin', newUser, headers);
+      console.log('Creating user with token:', token ? 'Token exists' : 'No token');
+      const response = await axios.post(url + '/api/user/create-by-admin', newUser, {
+        headers: { token }
+      });
+      
+      console.log('Response:', response.data);
+      
       if (response.data.success) {
         toast.success(`Đã tạo tài khoản ${newUser.role} thành công!`);
         setShowAddModal(false);
         setNewUser({ name: '', email: '', password: '', role: 'user' });
         fetchAllUsers();
       } else {
-        toast.error(response.data.message);
+        toast.error(response.data.message || 'Lỗi khi tạo tài khoản');
       }
     } catch (error) {
-      console.log(error);
-      toast.error('Lỗi khi tạo tài khoản');
+      console.error('Error creating user:', error);
+      toast.error(error.response?.data?.message || 'Lỗi khi tạo tài khoản');
     }
   };
 
   const handleDeleteUser = async (userId, userName) => {
+    if (!token) {
+      toast.error('Vui lòng đăng nhập trước');
+      return;
+    }
+    
     if (!window.confirm(`Bạn có chắc muốn xóa user "${userName}"?`)) {
       return;
     }
 
     try {
-      const headers = token ? { headers: { token } } : {};
-      const response = await axios.post(url + '/api/user/delete', { id: userId }, headers);
+      const response = await axios.post(url + '/api/user/delete', { id: userId }, {
+        headers: { token }
+      });
       if (response.data.success) {
         toast.success('Đã xóa user thành công');
         fetchAllUsers();
@@ -74,8 +97,8 @@ const Users = ({ url }) => {
         toast.error(response.data.message || 'Không thể xóa user');
       }
     } catch (error) {
-      console.log(error);
-      toast.error('Lỗi khi xóa user');
+      console.error('Error deleting user:', error);
+      toast.error(error.response?.data?.message || 'Lỗi khi xóa user');
     }
   };
 
