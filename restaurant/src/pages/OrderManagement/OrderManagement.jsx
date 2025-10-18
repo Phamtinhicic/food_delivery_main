@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { StoreContext } from '../../context/StoreContext';
 import './OrderManagement.css';
 
 const OrderManagement = ({ url }) => {
+  const { token } = useContext(StoreContext);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -16,14 +18,17 @@ const OrderManagement = ({ url }) => {
 
   // Fetch orders from backend
   const fetchOrders = async () => {
+    if (!token) return;
     try {
-      const response = await axios.get(`${url}/api/order/list`);
+      const response = await axios.post(`${url}/api/order/list`, {}, {
+        headers: { token }
+      });
       if (response.data.success) {
         const newOrders = response.data.data;
         
         // Check for new pending orders
-        const pendingOrders = newOrders.filter(o => o.status === 'Pending');
-        const oldPendingOrders = orders.filter(o => o.status === 'Pending');
+        const pendingOrders = newOrders.filter(o => o.status === 'Food Processing');
+        const oldPendingOrders = orders.filter(o => o.status === 'Food Processing');
         
         if (pendingOrders.length > oldPendingOrders.length) {
           setHasNewOrders(true);
@@ -55,20 +60,28 @@ const OrderManagement = ({ url }) => {
 
   // Update order status
   const updateOrderStatus = async (orderId, newStatus) => {
+    if (!token) {
+      toast.error('Vui lòng đăng nhập');
+      return;
+    }
     try {
       setLoading(true);
       const response = await axios.post(`${url}/api/order/status`, {
         orderId,
         status: newStatus
+      }, {
+        headers: { token }
       });
       
       if (response.data.success) {
         toast.success(`Đơn hàng đã được cập nhật: ${newStatus}`);
         fetchOrders();
         
-        if (newStatus === 'Preparing') {
+        if (newStatus === 'Out for delivery') {
           stopNotificationSound();
         }
+      } else {
+        toast.error(response.data.message || 'Lỗi khi cập nhật');
       }
     } catch (error) {
       toast.error('Lỗi khi cập nhật đơn hàng');
@@ -125,10 +138,12 @@ const OrderManagement = ({ url }) => {
 
   // Fetch orders on mount and every 10 seconds
   useEffect(() => {
-    fetchOrders();
-    const interval = setInterval(fetchOrders, 10000);
-    return () => clearInterval(interval);
-  }, []);
+    if (token) {
+      fetchOrders();
+      const interval = setInterval(fetchOrders, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [token]);
 
   // Group orders by status
   const groupedOrders = {

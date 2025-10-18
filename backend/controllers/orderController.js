@@ -110,15 +110,15 @@ const userOrders = async (req, res) => {
   }
 };
 
-// Listing orders for admin pannel
+// Listing orders for admin panel and restaurant
 const listOrders = async (req, res) => {
   try {
-    let userData = await userModel.findById(req.body.userId);
-    if (userData && userData.role === "admin") {
+    const userData = await userModel.findById(req.body.userId);
+    if (userData && (userData.role === "admin" || userData.role === "restaurant")) {
       const orders = await orderModel.find({});
       res.json({ success: true, data: orders });
     } else {
-      res.json({ success: false, message: "You are not admin" });
+      res.json({ success: false, message: "You are not authorized" });
     }
   } catch (error) {
     console.log(error);
@@ -126,17 +126,17 @@ const listOrders = async (req, res) => {
   }
 };
 
-// api for updating status
+// api for updating status (admin and restaurant can update)
 const updateStatus = async (req, res) => {
   try {
-    let userData = await userModel.findById(req.body.userId);
-    if (userData && userData.role === "admin") {
+    const userData = await userModel.findById(req.body.userId);
+    if (userData && (userData.role === "admin" || userData.role === "restaurant")) {
       await orderModel.findByIdAndUpdate(req.body.orderId, {
         status: req.body.status,
       });
       res.json({ success: true, message: "Status Updated Successfully" });
-    }else{
-      res.json({ success: false, message: "You are not an admin" });
+    } else {
+      res.json({ success: false, message: "You are not authorized" });
     }
   } catch (error) {
     console.log(error);

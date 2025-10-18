@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
+import { StoreContext } from '../../context/StoreContext';
 import './Dashboard.css';
 
 const Dashboard = ({ url }) => {
+  const { token } = useContext(StoreContext);
   const [stats, setStats] = useState({
     todayRevenue: 0,
     totalOrders: 0,
@@ -16,15 +18,20 @@ const Dashboard = ({ url }) => {
   const [chartPeriod, setChartPeriod] = useState('week'); // week, month
 
   useEffect(() => {
-    fetchDashboardData();
-  }, [chartPeriod]);
+    if (token) {
+      fetchDashboardData();
+    }
+  }, [chartPeriod, token]);
 
   const fetchDashboardData = async () => {
+    if (!token) return;
     try {
       setLoading(true);
       
       // Fetch orders
-      const ordersResponse = await axios.get(`${url}/api/order/list`);
+      const ordersResponse = await axios.post(`${url}/api/order/list`, {}, {
+        headers: { token }
+      });
       if (ordersResponse.data.success) {
         const orders = ordersResponse.data.data;
         calculateStats(orders);
