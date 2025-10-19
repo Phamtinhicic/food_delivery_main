@@ -11,24 +11,61 @@ Notes:
 - The `publish` job in the workflow is disabled by default. To enable pushing images to Docker Hub or another registry, set the workflow `publish` job `if` condition to `true` and add the appropriate secrets to your repository settings (e.g., `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`).
 - The workflow runs `npm ci`, `npm run lint`, `npm test`, `npm run build` if these scripts exist in the project's `package.json`.
 
-Local testing:
-- Build backend image locally:
+## Running with Docker Compose
 
+The easiest way to run all services together:
+
+1. **Setup environment variables:**
+```powershell
+copy .env.example .env
+# Edit .env and add your JWT_SECRET and STRIPE_SECRET_KEY
+```
+
+2. **Start all services:**
+```powershell
+docker-compose up -d
+```
+
+This will start:
+- MongoDB (port 27017)
+- Backend API (port 4000)
+- Customer Frontend (port 5174) - http://localhost:5174
+- Admin Panel (port 5175) - http://localhost:5175
+- Restaurant Panel (port 5176) - http://localhost:5176
+
+3. **View logs:**
+```powershell
+docker-compose logs -f
+```
+
+4. **Stop all services:**
+```powershell
+docker-compose down
+```
+
+5. **Stop and remove volumes (reset database):**
+```powershell
+docker-compose down -v
+```
+
+## Local testing (individual services)
+
+- Build backend image:
 ```powershell
 cd backend
 docker build -t food_delivery_backend:local .
 ```
 
-- Build frontend image locally (example for `restaurant` site):
-
+- Build any frontend (admin/restaurant/frontend):
 ```powershell
 cd restaurant
-docker build -t food_delivery_restaurant:local -f ../frontend/Dockerfile .
+docker build -t food_delivery_restaurant:local .
 ```
 
-If you want, I can:
-- Enable pushing images to Docker Hub and add templates to deploy to a server.
-- Add a `docker-compose.yml` to run all services together locally.
-- Add additional workflow steps for security scanning or tests.
+## Production Deployment
 
-What would you like next?
+To deploy to production:
+1. Set up secrets in GitHub repository settings (DOCKERHUB_USERNAME, DOCKERHUB_TOKEN)
+2. Enable the `publish` job in `.github/workflows/ci-cd.yml` by changing `if: false` to `if: github.ref == 'refs/heads/main'`
+3. Update image names in the publish job to match your Docker Hub repository
+4. Push to main branch - images will be built and pushed automatically
