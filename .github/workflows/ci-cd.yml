@@ -12,9 +12,6 @@ jobs:
     strategy:
       matrix:
         service: [backend, frontend, admin, restaurant]
-    defaults:
-      run:
-        working-directory: ${{ matrix.service }}
 
     steps:
       - name: Checkout code
@@ -26,9 +23,11 @@ jobs:
           node-version: 18
 
       - name: Install dependencies
+        working-directory: ${{ matrix.service }}
         run: npm ci
 
       - name: Run lint (if exists)
+        working-directory: ${{ matrix.service }}
         run: |
           if [ -f package.json ]; then
             if npm run | grep -q "lint"; then
@@ -37,6 +36,7 @@ jobs:
           fi
 
       - name: Run tests (if exists)
+        working-directory: ${{ matrix.service }}
         run: |
           if [ -f package.json ]; then
             if npm run | grep -q "test"; then
@@ -45,6 +45,7 @@ jobs:
           fi
 
       - name: Build
+        working-directory: ${{ matrix.service }}
         run: |
           if [ -f package.json ]; then
             if npm run | grep -q "build"; then
@@ -52,11 +53,10 @@ jobs:
             fi
           fi
 
-      - name: Build Docker image (local)
-        if: steps.check.outputs.skip != 'true'
+      - name: Build Docker image
         run: |
           IMAGE_NAME=${{ github.repository }}-${{ matrix.service }}:${{ github.sha }}
-          docker build -t ${IMAGE_NAME} .
+          docker build -t ${IMAGE_NAME} ./${{ matrix.service }}
 
   # Note: pushing to registry requires secrets (DOCKERHUB_USERNAME / DOCKERHUB_TOKEN or other registry)
   publish:
