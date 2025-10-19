@@ -156,6 +156,33 @@
   text-overflow: ellipsis;
 }
 
+.menu-item-status {
+  display: flex;
+  justify-content: center;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.status-badge {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-badge.available {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-badge.unavailable {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
 .menu-item-actions {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;

@@ -1,6 +1,6 @@
 .list-table-format{
     display: grid;
-    grid-template-columns: 0.5fr 2fr 1fr 1fr 0.5fr;
+    grid-template-columns: 0.5fr 2fr 1fr 1fr 1fr;
     align-items: center;
     gap: 10px;
     padding: 12px 15px;
@@ -12,6 +12,36 @@
 }
 .list-table-format img{
     width: 50px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.edit-btn, .delete-btn {
+    padding: 6px 10px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.edit-btn {
+    background: #fef3c7;
+}
+
+.edit-btn:hover {
+    background: #fde68a;
+}
+
+.delete-btn {
+    background: #fee2e2;
+}
+
+.delete-btn:hover {
+    background: #fecaca;
 }
 
 @media (max-width:600px) {

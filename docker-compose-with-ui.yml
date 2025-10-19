@@ -7,11 +7,26 @@ services:
     container_name: food_delivery_mongodb
     restart: unless-stopped
     ports:
-      - "27018:27017"  # Đổi port external thành 27018 để tránh conflict với MongoDB local
+      - "27017:27017"
     volumes:
       - mongodb_data:/data/db
     environment:
       MONGO_INITDB_DATABASE: FoodDelivery
+    networks:
+      - food_delivery_network
+
+  # Mongo Express - MongoDB Web UI
+  mongo-express:
+    image: mongo-express:latest
+    container_name: food_delivery_mongo_express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://mongodb:27017/
+      ME_CONFIG_BASICAUTH: false
+    depends_on:
+      - mongodb
     networks:
       - food_delivery_network
 

@@ -6,12 +6,17 @@ import { toast } from "react-toastify";
 import { useContext } from "react";
 import { StoreContext } from "../../context/StoreContext";
 import { useEffect } from "react";
-import {useNavigate } from "react-router-dom";
+import {useNavigate, useSearchParams } from "react-router-dom";
 
 const Add = ({url}) => {
   const navigate=useNavigate();
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get('id');
+  const isEditMode = !!editId;
+  
   const {token,admin} = useContext(StoreContext);
   const [image, setImage] = useState(false);
+  const [existingImage, setExistingImage] = useState("");
   const [data, setData] = useState({
     name: "",
     description: "",
@@ -32,36 +37,85 @@ const Add = ({url}) => {
     formData.append("description", data.description);
     formData.append("price", Number(data.price));
     formData.append("category", data.category);
-    formData.append("image", image);
-
-    const response = await axios.post(`${url}/api/food/add`, formData,{headers:{token}});
-    if (response.data.success) {
-      setData({
-        name: "",
-        description: "",
-        price: "",
-        category: "Salad",
-      });
-      setImage(false);
-      toast.success(response.data.message);
+    
+    if (isEditMode) {
+      // Update mode
+      formData.append("id", editId);
+      if (image) {
+        formData.append("image", image);
+      }
+      
+      const response = await axios.put(`${url}/api/food/update`, formData, {headers:{token}});
+      if (response.data.success) {
+        toast.success("Food item updated successfully!");
+        navigate("/list");
+      } else {
+        toast.error(response.data.message);
+      }
     } else {
-      toast.error(response.data.message);
+      // Add mode
+      formData.append("image", image);
+      const response = await axios.post(`${url}/api/food/add`, formData,{headers:{token}});
+      if (response.data.success) {
+        setData({
+          name: "",
+          description: "",
+          price: "",
+          category: "Salad",
+        });
+        setImage(false);
+        toast.success(response.data.message);
+      } else {
+        toast.error(response.data.message);
+      }
     }
   };
+
+  // Load food data for edit mode
+  const loadFoodData = async () => {
+    try {
+      const response = await axios.get(`${url}/api/food/list`);
+      if (response.data.success) {
+        const food = response.data.data.find(item => item._id === editId);
+        if (food) {
+          setData({
+            name: food.name,
+            description: food.description,
+            price: food.price,
+            category: food.category,
+          });
+          setExistingImage(food.image);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading food data:", error);
+      toast.error("Failed to load food data");
+    }
+  };
+
   useEffect(()=>{
     if(!admin && !token){
       toast.error("Please Login First");
        navigate("/");
     }
-  },[])
+    if (isEditMode) {
+      loadFoodData();
+    }
+  },[editId])
   return (
     <div className="add">
       <form onSubmit={onSubmitHandler} className="flex-col">
         <div className="add-img-upload flex-col">
-          <p>Upload image</p>
+          <p>Upload image {isEditMode && "(Leave empty to keep current image)"}</p>
           <label htmlFor="image">
             <img
-              src={image ? URL.createObjectURL(image) : assets.upload_area}
+              src={
+                image 
+                  ? URL.createObjectURL(image) 
+                  : existingImage 
+                    ? `${url}/images/${existingImage}` 
+                    : assets.upload_area
+              }
               alt=""
             />
           </label>
@@ -70,7 +124,7 @@ const Add = ({url}) => {
             type="file"
             id="image"
             hidden
-            required
+            required={!isEditMode}
           />
         </div>
         <div className="add-product-name flex-col">
@@ -127,7 +181,7 @@ const Add = ({url}) => {
           </div>
         </div>
         <button type="submit" className="add-btn">
-          ADD
+          {isEditMode ? "UPDATE" : "ADD"}
         </button>
       </form>
     </div>

@@ -5,7 +5,6 @@ import "react-toastify/dist/ReactToastify.css";
 
 // Import Restaurant Pages
 import {
-  Dashboard,
   OrderManagement,
   MenuManagement,
   StoreManagement
@@ -30,14 +29,6 @@ const App = () => {
         <Sidebar />
         <Routes>
           <Route path="/" element={<Login url={url}/>} />
-          <Route 
-            path="/dashboard" 
-            element={
-              <ProtectedRoute>
-                <Dashboard url={url}/>
-              </ProtectedRoute>
-            } 
-          />
           <Route 
             path="/orders" 
             element={

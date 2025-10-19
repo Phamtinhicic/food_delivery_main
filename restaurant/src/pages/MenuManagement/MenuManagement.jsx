@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
 import './MenuManagement.css';
 
 const MenuManagement = ({ url }) => {
@@ -11,7 +10,6 @@ const MenuManagement = ({ url }) => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [loading, setLoading] = useState(false);
   const [localAvailability, setLocalAvailability] = useState({});
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetchFoodList();
@@ -49,40 +47,6 @@ const MenuManagement = ({ url }) => {
     }
   };
 
-  // Toggle food availability (local state - can be synced with backend later)
-  const toggleAvailability = (foodId, currentStatus) => {
-    setLocalAvailability(prev => ({
-      ...prev,
-      [foodId]: !currentStatus
-    }));
-    
-    toast.success(
-      !currentStatus ? '✓ Món đã được bật' : '✕ Món đã được tắt (Hết hàng)',
-      { autoClose: 2000 }
-    );
-  };
-
-  const handleEdit = (foodId) => {
-    navigate(`/add?id=${foodId}`);
-  };
-
-  const handleDelete = async (foodId, foodName) => {
-    if (!window.confirm(`Bạn có chắc muốn xóa món "${foodName}"?`)) {
-      return;
-    }
-
-    try {
-      const response = await axios.post(`${url}/api/food/remove`, { id: foodId });
-      if (response.data.success) {
-        toast.success('Đã xóa món thành công');
-        fetchFoodList();
-      }
-    } catch (error) {
-      console.error('Error deleting food:', error);
-      toast.error('Không thể xóa món');
-    }
-  };
-
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
@@ -104,10 +68,7 @@ const MenuManagement = ({ url }) => {
   return (
     <div className="menu-management">
       <div className="menu-header">
-        <h1>🍴 Quản lý Thực đơn</h1>
-        <button className="btn-add-new" onClick={() => navigate('/add')}>
-          <span>➕</span> Thêm món mới
-        </button>
+        <h1>🍴 Quản lý Thực đơn (Chỉ xem)</h1>
       </div>
 
       {/* Category filters */}
@@ -129,12 +90,9 @@ const MenuManagement = ({ url }) => {
           <div className="empty-state-icon">🍽️</div>
           <div className="empty-state-text">
             {selectedCategory === 'All'
-              ? 'Chưa có món ăn nào. Hãy thêm món mới!'
+              ? 'Chưa có món ăn nào trong hệ thống'
               : `Không có món nào trong danh mục "${selectedCategory}"`}
           </div>
-          <button className="btn-add-new" onClick={() => navigate('/add')}>
-            <span>➕</span> Thêm món mới
-          </button>
         </div>
       ) : (
         <div className="menu-grid">
@@ -164,33 +122,11 @@ const MenuManagement = ({ url }) => {
 
                   <p className="menu-item-description">{food.description}</p>
 
-                  <div className="menu-item-actions">
-                    {/* Toggle On/Off - Most Important Button */}
-                    <button
-                      className={`action-btn toggle ${!isAvailable ? 'off' : ''}`}
-                      onClick={() => toggleAvailability(food._id, isAvailable)}
-                      title={isAvailable ? 'Tắt món (Hết hàng)' : 'Bật món'}
-                    >
-                      {isAvailable ? '✓ ON' : '✕ OFF'}
-                    </button>
-
-                    {/* Edit button */}
-                    <button
-                      className="action-btn edit"
-                      onClick={() => handleEdit(food._id)}
-                      title="Chỉnh sửa"
-                    >
-                      ✏️ Sửa
-                    </button>
-
-                    {/* Delete button */}
-                    <button
-                      className="action-btn delete"
-                      onClick={() => handleDelete(food._id, food.name)}
-                      title="Xóa"
-                    >
-                      🗑️ Xóa
-                    </button>
+                  {/* Read-only status display */}
+                  <div className="menu-item-status">
+                    <span className={`status-badge ${isAvailable ? 'available' : 'unavailable'}`}>
+                      {isAvailable ? '✓ Đang bán' : '✕ Hết hàng'}
+                    </span>
                   </div>
                 </div>
               </div>

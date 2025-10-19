@@ -21,6 +21,10 @@ const List = ({ url }) => {
   };
 
   const removeFood = async (foodId) => {
+    if (!window.confirm('Are you sure you want to delete this item?')) {
+      return;
+    }
+    
     const response = await axios.post(
       `${url}/api/food/remove`,
       { id: foodId },
@@ -33,6 +37,11 @@ const List = ({ url }) => {
       toast.error("Error");
     }
   };
+
+  const editFood = (foodId) => {
+    navigate(`/add?id=${foodId}`);
+  };
+
   useEffect(() => {
     if (!admin && !token) {
       toast.error("Please Login First");
@@ -50,7 +59,7 @@ const List = ({ url }) => {
           <b>Name</b>
           <b>Category</b>
           <b>Price</b>
-          <b>Action</b>
+          <b>Actions</b>
         </div>
         {list.map((item, index) => {
           return (
@@ -59,8 +68,21 @@ const List = ({ url }) => {
               <p>{item.name}</p>
               <p>{item.category}</p>
               <p>${item.price}</p>
-              <p onClick={() => removeFood(item._id)} className="cursor">
-                X
+              <p className="action-buttons">
+                <button 
+                  onClick={() => editFood(item._id)} 
+                  className="edit-btn"
+                  title="Edit"
+                >
+                  ✏️
+                </button>
+                <button 
+                  onClick={() => removeFood(item._id)} 
+                  className="delete-btn"
+                  title="Delete"
+                >
+                  🗑️
+                </button>
               </p>
             </div>
           );
