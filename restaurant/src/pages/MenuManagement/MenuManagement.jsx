@@ -73,15 +73,31 @@ const MenuManagement = ({ url }) => {
 
       {/* Category filters */}
       <div className="menu-filters">
-        {categories.map((category) => (
-          <button
-            key={category}
-            className={`filter-chip ${selectedCategory === category ? 'active' : ''}`}
-            onClick={() => setSelectedCategory(category)}
-          >
-            {category === 'All' ? '📋 Tất cả' : `🍽️ ${category}`}
-          </button>
-        ))}
+        <div className="filter-header">
+          <span className="filter-label">Lọc theo danh mục:</span>
+          {selectedCategory !== 'All' && (
+            <button 
+              className="reset-filter-btn"
+              onClick={() => setSelectedCategory('All')}
+            >
+              ✕ Xóa bộ lọc
+            </button>
+          )}
+        </div>
+        <div className="filter-chips">
+          {categories.map((category) => (
+            <button
+              key={category}
+              className={`filter-chip ${selectedCategory === category ? 'active' : ''} ${category === 'All' ? 'all-category' : ''}`}
+              onClick={() => setSelectedCategory(category)}
+            >
+              {category === 'All' ? '📋 Tất cả món' : `🍽️ ${category}`}
+              {selectedCategory === category && category !== 'All' && (
+                <span className="active-indicator"> ✓</span>
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Menu grid */}

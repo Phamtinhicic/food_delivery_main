@@ -37,9 +37,45 @@
 }
 
 .menu-filters {
+  margin-bottom: 24px;
+}
+
+.filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.filter-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.reset-filter-btn {
+  padding: 6px 12px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.reset-filter-btn:hover {
+  background: #dc2626;
+  transform: scale(1.05);
+}
+
+.filter-chips {
   display: flex;
   gap: 12px;
-  margin-bottom: 24px;
   flex-wrap: wrap;
 }
 
@@ -56,12 +92,32 @@
 
 .filter-chip:hover {
   border-color: #2563eb;
+  transform: translateY(-1px);
 }
 
 .filter-chip.active {
   background: #2563eb;
   color: white;
   border-color: #2563eb;
+}
+
+.filter-chip.all-category {
+  border-color: #10b981;
+  font-weight: 600;
+}
+
+.filter-chip.all-category:hover {
+  border-color: #059669;
+  background: #ecfdf5;
+}
+
+.filter-chip.all-category.active {
+  background: #10b981;
+  border-color: #10b981;
+}
+
+.active-indicator {
+  font-weight: 700;
 }
 
 .menu-grid {

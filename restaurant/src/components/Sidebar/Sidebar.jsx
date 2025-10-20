@@ -16,11 +16,6 @@ const Sidebar = () => {
           <span>🍴</span>
           <p>Quản lý Thực đơn</p>
         </NavLink>
-        
-        <NavLink to='/store' className="sidebar-option">
-          <span>🏪</span>
-          <p>Quản lý Cửa hàng</p>
-        </NavLink>
       </div>
     </div>
   );

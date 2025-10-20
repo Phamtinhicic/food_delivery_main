@@ -1,188 +1,374 @@
-# 🏪 Restaurant Panel - Giao diện Nhà hàng# 🏪 Restaurant Panel - Giao diện Nhà hàng
+# 🏪 Restaurant Panel - Giao diện Nhà hàng# 🏪 Restaurant Panel - Giao diện Nhà hàng# 🏪 Restaurant Panel - Giao diện Nhà hàng
 
 
 
-Giao diện quản lý dành riêng cho nhà hàng, tối ưu cho môi trường bếp bận rộn.Giao diện quản lý dành riêng cho nhà hàng trong hệ thống Food Delivery.
+Giao diện quản lý dành riêng cho nhà hàng, tối ưu cho môi trường bếp bận rộn.
 
 
 
-## 🎯 Mục đích## 🎯 Mục đích
+## 🎯 Mục đíchGiao diện quản lý dành riêng cho nhà hàng, tối ưu cho môi trường bếp bận rộn.Giao diện quản lý dành riêng cho nhà hàng trong hệ thống Food Delivery.
 
 
 
-Hệ thống được thiết kế đặc biệt cho **nhà hàng/quán ăn** với focus:Được thiết kế đặc biệt cho **nhà hàng** với focus vào:
+Hệ thống được thiết kế đặc biệt cho **nhà hàng/quán ăn** với focus:
 
-- ✅ Nhận và xử lý đơn hàng nhanh chóng- ✅ Nhận đơn hàng nhanh chóng
+- ✅ Nhận và xử lý đơn hàng nhanh chóng
 
-- ✅ Quản lý món ăn đơn giản (chỉ xem)- ✅ Quản lý món ăn dễ dàng  
+- ✅ Quản lý món ăn đơn giản (chỉ xem)## 🎯 Mục đích## 🎯 Mục đích
 
-- ✅ Thao tác ít click, dễ sử dụng trong môi trường bếp- ✅ Kiểm soát trạng thái cửa hàng
+- ✅ Thao tác ít click, dễ sử dụng trong môi trường bếp
+
+- ✅ UI cải thiện: Dễ quay lại xem tất cả món sau khi lọc
+
+
+
+## 🚀 Chạy ứng dụngHệ thống được thiết kế đặc biệt cho **nhà hàng/quán ăn** với focus:Được thiết kế đặc biệt cho **nhà hàng** với focus vào:
+
+
+
+```bash- ✅ Nhận và xử lý đơn hàng nhanh chóng- ✅ Nhận đơn hàng nhanh chóng
+
+# Cài đặt dependencies
+
+npm install- ✅ Quản lý món ăn đơn giản (chỉ xem)- ✅ Quản lý món ăn dễ dàng  
+
+
+
+# Chạy dev server- ✅ Thao tác ít click, dễ sử dụng trong môi trường bếp- ✅ Kiểm soát trạng thái cửa hàng
+
+npm run dev
 
 - ✅ Thông báo âm thanh rõ ràng- ✅ Môi trường bếp ồn ào, bận rộn
 
+# Build production
 
+npm run build
+
+```
 
 ## 🚀 Chạy ứng dụng## 🚀 Chạy ứng dụng
 
+**URL:** http://localhost:5176
 
+
+
+## 📂 Cấu trúc
 
 ```bash```bash
 
-# Cài đặt dependencies# Cài đặt dependencies
+```
 
-npm installnpm install
+restaurant/# Cài đặt dependencies# Cài đặt dependencies
 
+├── src/
 
+│   ├── pages/npm installnpm install
 
-# Chạy dev server# Chạy dev server
+│   │   ├── Orders/           # 🍽️ Quản lý đơn hàng (Kanban)
 
-npm run devnpm run dev
+│   │   └── MenuManagement/   # 🍴 Xem thực đơn (read-only)
 
+│   ├── components/
 
+│   │   ├── Navbar/# Chạy dev server# Chạy dev server
 
-# Build production# Build production
+│   │   └── Sidebar/
 
-npm run buildnpm run build
+│   ├── assets/npm run devnpm run dev
 
-``````
+│   ├── App.jsx
 
+│   └── main.jsx
 
+├── public/
 
-**URL:** http://localhost:5176Ứng dụng sẽ chạy tại: **http://localhost:5176**
-
-
-
-## 📂 Cấu trúc## 📂 Cấu trúc thư mục
-
-
-
-``````
-
-restaurant/restaurant/
-
-├── src/├── src/
-
-│   ├── pages/│   ├── pages/                    # Các màn hình chính
-
-│   │   ├── Orders/           # 🍽️ Quản lý đơn hàng (Kanban)│   │   ├── Dashboard/           # 📊 Tổng quan
-
-│   │   ├── MenuManagement/   # 🍴 Xem thực đơn (read-only)│   │   ├── OrderManagement/     # 🍽️ Quản lý đơn hàng
-
-│   │   └── StoreManagement/  # 🏪 Quản lý cửa hàng│   │   ├── MenuManagement/      # 🍴 Quản lý thực đơn
-
-│   ├── components/│   │   └── StoreManagement/     # 🏪 Quản lý cửa hàng
-
-│   │   ├── Navbar/│   ├── components/              # Components dùng chung
-
-│   │   └── Sidebar/│   │   ├── Navbar/
-
-│   ├── assets/│   │   └── Sidebar/
-
-│   ├── App.jsx│   ├── assets/                  # Hình ảnh, icons
-
-│   └── main.jsx│   ├── App.jsx                  # Main app
-
-├── public/│   ├── main.jsx                 # Entry point
-
-├── package.json│   └── index.css                # Global styles
-
-└── README.md (file này)├── public/
-
-```├── index.html
-
-├── package.json
-
-## 🌟 Tính năng├── vite.config.js
+├── package.json# Build production# Build production
 
 └── README.md (file này)
 
-### 1. 🍽️ Quản lý Đơn hàng (Orders)```
+```npm run buildnpm run build
 
 
 
-**Route:** `/orders`## 🌟 Các màn hình chính
+## 🌟 Tính năng``````
 
 
 
-**Kanban Board với 4 cột trạng thái:**### 1. 📊 Dashboard - Tổng quan
+### 1. 🍽️ Quản lý Đơn hàng (Orders)
 
-- 🔔 **Đơn mới (Food Processing)** - Chờ xác nhận**Route:** `/dashboard`
 
-- 👨‍🍳 **Đang chuẩn bị (Out for delivery)** - Đang làm
 
-- ✅ **Hoàn thành (Delivered)** - Đã giaoMàn hình đầu tiên khi đăng nhập.
+**Route:** `/orders`**URL:** http://localhost:5176Ứng dụng sẽ chạy tại: **http://localhost:5176**
+
+
+
+**Kanban Board với 4 cột trạng thái:**
+
+- 🔔 **Đơn mới (Food Processing)** - Chờ xác nhận
+
+- 👨‍🍳 **Đang chuẩn bị (Out for delivery)** - Đang làm## 📂 Cấu trúc## 📂 Cấu trúc thư mục
+
+- ✅ **Hoàn thành (Delivered)** - Đã giao
 
 - ❌ **Đã hủy (Cancelled)** - Đã hủy
 
-**Hiển thị:**
 
-**Tính năng nổi bật:**- 💰 Doanh thu hôm nay
 
-- 🔄 Auto-refresh mỗi 10 giây- 📦 Tổng đơn hàng
+**Tính năng nổi bật:**``````
 
-- 📊 Hiển thị đầy đủ: Mã đơn, Khách hàng, Món ăn, Tổng tiền- ✅ Đơn hoàn thành
+- 🔄 Auto-refresh mỗi 10 giây
 
-- ⚡ Cập nhật trạng thái nhanh- ❌ Đơn bị hủy
+- 📊 Hiển thị đầy đủ: Mã đơn, Khách hàng, Món ăn, Tổng tiềnrestaurant/restaurant/
 
-- 🎨 Color-coded theo trạng thái- 📈 Biểu đồ doanh thu (7/30 ngày)
+- ⚡ Cập nhật trạng thái nhanh
 
-- 🏆 Top món bán chạy
-
-### 2. 🍴 Quản lý Thực đơn (Menu Management)- 🕒 Đơn hàng gần đây
+- 🎨 Color-coded theo trạng thái├── src/├── src/
 
 
 
-**Route:** `/menu`---
+### 2. 🍴 Quản lý Thực đơn (Menu Management)│   ├── pages/│   ├── pages/                    # Các màn hình chính
 
 
 
-**Chức năng:**### 2. 🍽️ Order Management - Quản lý Đơn hàng ⭐
+**Route:** `/menu`│   │   ├── Orders/           # 🍽️ Quản lý đơn hàng (Kanban)│   │   ├── Dashboard/           # 📊 Tổng quan
+
+
+
+**Chức năng:**│   │   ├── MenuManagement/   # 🍴 Xem thực đơn (read-only)│   │   ├── OrderManagement/     # 🍽️ Quản lý đơn hàng
 
 - 👀 **Chỉ XEM** danh sách món ăn
 
-- ✅ Hiển thị trạng thái (Đang bán / Hết hàng)**Route:** `/orders`
+- ✅ Hiển thị trạng thái (Đang bán / Hết hàng)│   │   └── StoreManagement/  # 🏪 Quản lý cửa hàng│   │   ├── MenuManagement/      # 🍴 Quản lý thực đơn
+
+- 🔍 **Lọc theo category** với UI cải thiện:
+
+  - 📋 **Nút "Tất cả món"** với viền xanh lá nổi bật, font đậm│   ├── components/│   │   └── StoreManagement/     # 🏪 Quản lý cửa hàng
+
+  - ✕ **Nút "Xóa bộ lọc"** màu đỏ ở góc phải (chỉ hiện khi đang lọc)
+
+  - ✓ **Dấu tích (✓)** hiển thị trên category đang chọn│   │   ├── Navbar/│   ├── components/              # Components dùng chung
+
+  - 🎨 Hover effect: nút phóng to khi di chuột qua
+
+- ❌ KHÔNG thể thêm/sửa/xóa (chỉ Admin mới được)│   │   └── Sidebar/│   │   ├── Navbar/
+
+
+
+**Lý do:** Nhân viên nhà hàng chỉ cần biết món nào còn bán, không được phép chỉnh sửa menu.│   ├── assets/│   │   └── Sidebar/
+
+
+
+**Cách quay lại xem tất cả món:**│   ├── App.jsx│   ├── assets/                  # Hình ảnh, icons
+
+1. **Cách 1:** Click nút "📋 Tất cả món" (viền xanh lá)
+
+2. **Cách 2:** Click nút "✕ Xóa bộ lọc" (màu đỏ, góc phải)│   └── main.jsx│   ├── App.jsx                  # Main app
+
+
+
+## 🔐 Đăng nhập├── public/│   ├── main.jsx                 # Entry point
+
+
+
+**Tài khoản Admin mặc định:**├── package.json│   └── index.css                # Global styles
+
+- Email: `admin@example.com`
+
+- Password: `AdminPass123`└── README.md (file này)├── public/
+
+
+
+Sử dụng tài khoản này để đăng nhập vào Restaurant Panel.```├── index.html
+
+
+
+## 🎨 Thiết kế├── package.json
+
+
+
+### Nguyên tắc UX:## 🌟 Tính năng├── vite.config.js
+
+1. **Dễ nhìn** - Font lớn, màu sắc rõ ràng
+
+2. **Nhanh chóng** - Ít bước thao tác└── README.md (file này)
+
+3. **Responsive** - Hoạt động tốt trên tablet
+
+4. **Intuitive** - Dễ quay lại xem tất cả sau khi lọc### 1. 🍽️ Quản lý Đơn hàng (Orders)```
+
+
+
+### Color Scheme:
+
+- 🔵 Primary: `#2563eb`
+
+- 🟢 Success/All button: `#10b981` (xanh lá)**Route:** `/orders`## 🌟 Các màn hình chính
+
+- 🔴 Danger/Reset: `#dc2626`
+
+- 🟠 Warning: `#f59e0b`
+
+
+
+## 🔧 Tech Stack**Kanban Board với 4 cột trạng thái:**### 1. 📊 Dashboard - Tổng quan
+
+
+
+- **Framework:** React 18- 🔔 **Đơn mới (Food Processing)** - Chờ xác nhận**Route:** `/dashboard`
+
+- **Build:** Vite
+
+- **Routing:** React Router DOM v6- 👨‍🍳 **Đang chuẩn bị (Out for delivery)** - Đang làm
+
+- **HTTP:** Axios
+
+- **Notifications:** React Toastify- ✅ **Hoàn thành (Delivered)** - Đã giaoMàn hình đầu tiên khi đăng nhập.
+
+- **Styling:** CSS3 (custom)
+
+- ❌ **Đã hủy (Cancelled)** - Đã hủy
+
+## 🔗 API Integration
+
+**Hiển thị:**
+
+Backend URL: `http://localhost:4000`
+
+**Tính năng nổi bật:**- 💰 Doanh thu hôm nay
+
+**Endpoints sử dụng:**
+
+```javascript- 🔄 Auto-refresh mỗi 10 giây- 📦 Tổng đơn hàng
+
+GET  /api/order/list        // Lấy danh sách đơn
+
+POST /api/order/status      // Cập nhật trạng thái đơn- 📊 Hiển thị đầy đủ: Mã đơn, Khách hàng, Món ăn, Tổng tiền- ✅ Đơn hoàn thành
+
+GET  /api/food/list         // Lấy danh sách món
+
+```- ⚡ Cập nhật trạng thái nhanh- ❌ Đơn bị hủy
+
+
+
+## 🐛 Xử lý lỗi- 🎨 Color-coded theo trạng thái- 📈 Biểu đồ doanh thu (7/30 ngày)
+
+
+
+### Lỗi JWT "invalid signature"- 🏆 Top món bán chạy
+
+```javascript
+
+// Mở Console (F12) và chạy:### 2. 🍴 Quản lý Thực đơn (Menu Management)- 🕒 Đơn hàng gần đây
+
+localStorage.clear();
+
+location.reload();
+
+// Đăng nhập lại
+
+```**Route:** `/menu`---
+
+
+
+### Không thấy thay đổi UI
+
+```
+
+Ctrl + Shift + R    // Hard refresh (Windows/Linux)**Chức năng:**### 2. 🍽️ Order Management - Quản lý Đơn hàng ⭐
+
+Cmd + Shift + R     // Hard refresh (Mac)
+
+- 👀 **Chỉ XEM** danh sách món ăn
+
+// Hoặc
+
+F12 → Network → tick "Disable cache" → Reload- ✅ Hiển thị trạng thái (Đang bán / Hết hàng)**Route:** `/orders`
+
+```
 
 - 🔍 Lọc theo category
 
-- ❌ KHÔNG thể thêm/sửa/xóa (chỉ Admin mới được)**Đây là màn hình QUAN TRỌNG NHẤT - Nhà hàng sẽ mở 90% thời gian!**
+### Orders không hiển thị
+
+1. Kiểm tra backend đang chạy: http://localhost:4000- ❌ KHÔNG thể thêm/sửa/xóa (chỉ Admin mới được)**Đây là màn hình QUAN TRỌNG NHẤT - Nhà hàng sẽ mở 90% thời gian!**
+
+2. Check token hợp lệ (xóa localStorage và login lại)
+
+3. Xem Console (F12) có lỗi API không
 
 
 
-**Lý do:** Nhân viên nhà hàng chỉ cần biết món nào còn bán, không được phép chỉnh sửa menu.#### Kanban Board với 5 cột:
+## 📊 Quyền hạn**Lý do:** Nhân viên nhà hàng chỉ cần biết món nào còn bán, không được phép chỉnh sửa menu.#### Kanban Board với 5 cột:
 
 
 
-### 3. 🏪 Quản lý Cửa hàng (Store Management)**🔔 Đơn mới (Pending)**
+| Chức năng | Restaurant | Admin |
 
-- Âm thanh thông báo **LẶP LẠI** cho đến khi xác nhận
+|-----------|------------|-------|
 
-**Route:** `/store`- Môi trường bếp rất ồn → cần âm thanh rõ ràng
+| Xem đơn hàng | ✅ | ✅ |### 3. 🏪 Quản lý Cửa hàng (Store Management)**🔔 Đơn mới (Pending)**
+
+| Cập nhật trạng thái đơn | ✅ | ✅ |
+
+| Xem menu | ✅ | ✅ |- Âm thanh thông báo **LẶP LẠI** cho đến khi xác nhận
+
+| Thêm/Sửa/Xóa món | ❌ | ✅ |
+
+| Quản lý Dashboard | ❌ | ✅ |**Route:** `/store`- Môi trường bếp rất ồn → cần âm thanh rõ ràng
+
+| Quản lý Users | ❌ | ✅ |
 
 - Hiển thị: Mã đơn, Tên khách, Món, Tổng tiền, Ghi chú
 
+## 🆕 Cập nhật mới (October 20, 2025)
+
 **Chức năng:**- Actions: **"Xác nhận"** và **"Hủy đơn"**
 
-- 📊 Thống kê nhanh (đơn hàng, doanh thu)
+### Version 2.1 - UI Improvements
 
-- ℹ️ Thông tin cửa hàng**👨‍🍳 Đang chuẩn bị (Preparing)**
+- ✅ Thêm **nút "Tất cả món"** với viền xanh lá nổi bật- 📊 Thống kê nhanh (đơn hàng, doanh thu)
 
-- Đơn đã xác nhận, bếp đang làm
+- ✅ Thêm **nút "✕ Xóa bộ lọc"** màu đỏ (chỉ hiện khi đang lọc)
+
+- ✅ Thêm **dấu tích (✓)** hiển thị trên category đang chọn- ℹ️ Thông tin cửa hàng**👨‍🍳 Đang chuẩn bị (Preparing)**
+
+- ✅ Thêm **label "Lọc theo danh mục:"** để rõ ràng hơn
+
+- ✅ Xóa trang "Quản lý Cửa hàng" (không cần thiết)- Đơn đã xác nhận, bếp đang làm
+
+- ✅ Cải thiện UX: 2 cách dễ dàng để quay lại xem tất cả món
 
 ## 🔐 Đăng nhập- Action: **"Sẵn sàng giao"**
 
+## 📚 Tài liệu liên quan
 
 
-**Tài khoản Admin mặc định:****🚚 Đang giao (Delivering)**
+
+- [README.md](../README.md) - Tổng quan dự án
+
+- [SETUP_GUIDE.md](../SETUP_GUIDE.md) - Hướng dẫn cài đặt chi tiết**Tài khoản Admin mặc định:****🚚 Đang giao (Delivering)**
+
+- [PROJECT_OVERVIEW.md](../PROJECT_OVERVIEW.md) - Kiến trúc hệ thống
 
 - Email: `admin@example.com`- Đã giao cho shipper
 
+## 👥 Target Users
+
 - Password: `AdminPass123`- Chỉ theo dõi
 
+- 👨‍🍳 **Nhân viên bếp** - Xem đơn mới, chuẩn bị món
 
+- 👨‍💼 **Quản lý nhà hàng** - Theo dõi đơn hàng, doanh thu
+
+- 🙋 **Nhân viên phục vụ** - Check status đơn hàng
 
 Sử dụng tài khoản này để đăng nhập vào Restaurant Panel.**✅ Hoàn thành (Completed)**
 
+---
+
 - Lịch sử đơn thành công
+
+**Được thiết kế cho trải nghiệm thực tế của nhà hàng** 🍽️
 
 ## 🎨 Thiết kế
 

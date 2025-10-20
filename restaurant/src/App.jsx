@@ -6,8 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 // Import Restaurant Pages
 import {
   OrderManagement,
-  MenuManagement,
-  StoreManagement
+  MenuManagement
 } from "./pages";
 
 // Import Components
@@ -42,14 +41,6 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <MenuManagement url={url}/>
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/store" 
-            element={
-              <ProtectedRoute>
-                <StoreManagement url={url}/>
               </ProtectedRoute>
             } 
           />
