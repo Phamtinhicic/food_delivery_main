@@ -55,17 +55,17 @@ docker-compose up -d
 
 ![Lọc món](frontend/public/screenshots/Screenshot%202025-10-21%20011319.png)
 
+**Đơn hàng**
+
+![Đơn hàng](frontend/public/screenshots/Screenshot%202025-10-21%20011348.png)
+
 **Giỏ hàng**
 
-![Giỏ hàng](frontend/public/screenshots/Screenshot%202025-10-21%20011348.png)
+![Giỏ hàng](frontend/public/screenshots/Screenshot%202025-10-21%20011412.png)
 
 **Thanh toán**
 
-![Thanh toán](frontend/public/screenshots/Screenshot%202025-10-21%20011412.png)
-
-**Theo dõi đơn hàng**
-
-![Đơn hàng](frontend/public/screenshots/Screenshot%202025-10-21%20011437.png)
+![Thanh toán](frontend/public/screenshots/Screenshot%202025-10-21%20011437.png)
 
 **Thanh toán bằng Stripe**
 
