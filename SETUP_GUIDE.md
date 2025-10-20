@@ -110,11 +110,58 @@ docker-compose up -d --build
 
 ### Bước 6: Tạo tài khoản Admin đầu tiên
 
-Tài khoản admin mặc định đã được tạo sẵn:
+#### Option 1: Sử dụng tài khoản mặc định (Khuyến nghị)
+
+Tài khoản admin đã được tạo sẵn (nếu bạn restore từ mongodb_backup):
 - **Email:** admin@example.com
 - **Password:** AdminPass123
 
 Đăng nhập vào Admin Panel và Restaurant Panel bằng tài khoản này.
+
+#### Option 2: Tạo admin mới bằng script
+
+Nếu bạn khởi động database từ đầu (chưa có data):
+
+```bash
+# Vào backend container
+docker exec -it food_delivery_backend sh
+
+# Chạy script tạo admin
+node createAdmin.js
+
+# Nhập thông tin:
+# Email: youradmin@example.com
+# Password: YourSecurePassword123
+# Name: Admin Name
+
+# Exit container
+exit
+```
+
+#### Option 3: Tạo admin thủ công qua MongoDB
+
+```bash
+# Vào MongoDB shell
+docker exec -it food_delivery_mongodb mongosh
+
+# Trong mongosh:
+use FoodDelivery
+
+# Tạo user với role admin (password đã hash bcrypt)
+db.users.insertOne({
+  name: "Admin",
+  email: "admin@example.com",
+  password: "$2b$10$YourBcryptHashedPasswordHere",
+  role: "admin",
+  cartData: {},
+  createdAt: new Date(),
+  updatedAt: new Date()
+})
+
+exit
+```
+
+**Lưu ý:** Để hash password, bạn cần dùng bcrypt với SALT từ .env. Cách dễ nhất là dùng Option 1 hoặc 2.
 
 ### Các lệnh Docker hữu ích
 

@@ -73,7 +73,7 @@ food_delivery_main/
 
 **Mục đích:** Cho khách hàng đặt món, thanh toán, theo dõi đơn hàng
 
-**Port:** `5173`
+**Port:** `5174` (Docker), `5173` (Local dev)
 
 **Tính năng:**
 - 🏠 Trang chủ với menu món ăn
@@ -90,7 +90,8 @@ food_delivery_main/
 cd frontend
 npm install
 npm run dev
-# Truy cập: http://localhost:5173
+# Docker: http://localhost:5174
+# Local dev: http://localhost:5173
 ```
 
 ---
@@ -264,12 +265,14 @@ npm run dev
 
 ## 📱 Ports Summary
 
-| Service | Port | URL |
-|---------|------|-----|
-| Backend | 4000 | http://localhost:4000 |
-| Frontend | 5173 | http://localhost:5173 |
-| Admin | 5175 | http://localhost:5175 |
-| Restaurant | 5176 | http://localhost:5176 |
+| Service | Port (Docker) | Port (Local) | URL |
+|---------|---------------|--------------|-----|
+| Backend | 4000 | 4000 | http://localhost:4000 |
+| Frontend | 5174 | 5173 | http://localhost:5174 (Docker) |
+| Admin | 5175 | 5173 | http://localhost:5175 |
+| Restaurant | 5176 | 5173 | http://localhost:5176 |
+
+**Lưu ý:** Khi chạy local dev (không Docker), tất cả frontend apps đều mặc định dùng port 5173 của Vite. Chỉ chạy 1 app tại 1 thời điểm, hoặc config port khác trong `vite.config.js`.
 
 ---
 
