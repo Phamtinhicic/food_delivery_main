@@ -1,4 +1,4 @@
-# 🍕 Food Delivery System - Hệ thống Giao đồ ăn trực tuyến# 🍕 Food Delivery System - Hệ thống Giao đồ ăn trực tuyến#  TOMATO - Food Ordering Website
+# 🍕 Food Delivery System# 🍕 Food Delivery System - Hệ thống Giao đồ ăn trực tuyến# 🍕 Food Delivery System - Hệ thống Giao đồ ăn trực tuyến#  TOMATO - Food Ordering Website
 
 
 
@@ -6,95 +6,199 @@
 
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue)](https://www.docker.com/)
 
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)Hệ thống giao đồ ăn hoàn chỉnh được xây dựng với **MERN Stack** (MongoDB, Express.js, React, Node.js), bao gồm **3 giao diện riêng biệt** cho khách hàng, quản trị viên và nhà hàng.
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)[![MERN Stack](https://img.shields.io/badge/MERN-Stack-green)](https://www.mongodb.com/mern-stack)
 
 
 
-Hệ thống giao đồ ăn hoàn chỉnh được xây dựng với **MERN Stack** (MongoDB, Express.js, React, Node.js), bao gồm **3 giao diện riêng biệt** được thiết kế chuyên nghiệp cho khách hàng, quản trị viên và nhà hàng.
+Hệ thống giao đồ ăn hoàn chỉnh với **3 giao diện riêng biệt**: Khách hàng, Admin và Nhà hàng.[![Docker](https://img.shields.io/badge/Docker-Ready-blue)](https://www.docker.com/)
 
 
 
-------Hệ thống giao đồ ăn hoàn chỉnh được xây dựng với **MERN Stack** (MongoDB, Express.js, React, Node.js), bao gồm **3 giao diện riêng biệt** cho khách hàng, admin và nhà hàng.
+---[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)Hệ thống giao đồ ăn hoàn chỉnh được xây dựng với **MERN Stack** (MongoDB, Express.js, React, Node.js), bao gồm **3 giao diện riêng biệt** cho khách hàng, quản trị viên và nhà hàng.
 
 
 
-## 📖 Giới thiệu Dự án
+## 🚀 Bắt đầu nhanh
 
 
 
-### 🎯 Mục tiêu## 📋 Tính năng chính
+### Với Docker (Khuyến nghị)Hệ thống giao đồ ăn hoàn chỉnh được xây dựng với **MERN Stack** (MongoDB, Express.js, React, Node.js), bao gồm **3 giao diện riêng biệt** được thiết kế chuyên nghiệp cho khách hàng, quản trị viên và nhà hàng.
 
-Xây dựng một nền tảng giao đồ ăn trực tuyến toàn diện, cho phép:
 
-- **Khách hàng:** Dễ dàng đặt món, thanh toán online và theo dõi đơn hàng real-time
+
+```bash
+
+# Clone project
+
+git clone https://github.com/Phamtinhicic/food_delivery_main.git------Hệ thống giao đồ ăn hoàn chỉnh được xây dựng với **MERN Stack** (MongoDB, Express.js, React, Node.js), bao gồm **3 giao diện riêng biệt** cho khách hàng, admin và nhà hàng.
+
+cd food_delivery_main
+
+
+
+# Tạo file .env
+
+copy .env.example .env## 📖 Giới thiệu Dự án
+
+
+
+# Chạy
+
+docker-compose up -d
+
+```### 🎯 Mục tiêu## 📋 Tính năng chính
+
+
+
+**Truy cập:**Xây dựng một nền tảng giao đồ ăn trực tuyến toàn diện, cho phép:
+
+- 👥 Frontend: http://localhost:5174
+
+- ⚙️ Admin: http://localhost:5175- **Khách hàng:** Dễ dàng đặt món, thanh toán online và theo dõi đơn hàng real-time
+
+- 🏪 Restaurant: http://localhost:5176
 
 - **Nhà hàng:** Quản lý đơn hàng hiệu quả với giao diện Kanban, bật/tắt món nhanh chóng
 
-- **Quản trị viên:** Kiểm soát toàn bộ hệ thống, quản lý món ăn, đơn hàng và người dùng### 👥 Frontend - Giao diện Khách hàng## 📋 Tính năng chínhHệ thống giao đồ ăn hoàn chỉnh được xây dựng với **MERN Stack** (MongoDB, Express.js, React, Node.js), bao gồm **3 giao diện riêng biệt** cho khách hàng, admin và nhà hàng.This repository hosts the source code for TOMATO, a dynamic food ordering website built with the MERN Stack. It offers a user-friendly platform for seamless online food ordering.
+**Đăng nhập Admin:**
+
+- Email: `admin@example.com`- **Quản trị viên:** Kiểm soát toàn bộ hệ thống, quản lý món ăn, đơn hàng và người dùng### 👥 Frontend - Giao diện Khách hàng## 📋 Tính năng chínhHệ thống giao đồ ăn hoàn chỉnh được xây dựng với **MERN Stack** (MongoDB, Express.js, React, Node.js), bao gồm **3 giao diện riêng biệt** cho khách hàng, admin và nhà hàng.This repository hosts the source code for TOMATO, a dynamic food ordering website built with the MERN Stack. It offers a user-friendly platform for seamless online food ordering.
+
+- Password: `AdminPass123`
 
 
+
+---
 
 ### 🌟 Đặc điểm nổi bật- 🏠 Trang chủ với danh sách món ăn đa dạng
 
+## 📋 Tính năng chính
+
 - ✅ **3 giao diện độc lập:** Frontend, Admin Panel, Restaurant Panel
 
-- ✅ **Real-time updates:** Theo dõi đơn hàng trực tiếp- 🔍 Lọc món theo 8 danh mục (Salad, Rolls, Deserts, Sandwich, Cake, Pure Veg, Pasta, Noodles)
+### 👥 Frontend (Khách hàng)
 
-- ✅ **Thanh toán đa dạng:** Stripe (online) + COD (tiền mặt)
+- 🛒 Đặt món, giỏ hàng- ✅ **Real-time updates:** Theo dõi đơn hàng trực tiếp- 🔍 Lọc món theo 8 danh mục (Salad, Rolls, Deserts, Sandwich, Cake, Pure Veg, Pasta, Noodles)
+
+- 💳 Thanh toán Stripe + COD
+
+- 📦 Theo dõi đơn hàng real-time- ✅ **Thanh toán đa dạng:** Stripe (online) + COD (tiền mặt)
+
+- 🔐 Đăng ký/Đăng nhập
 
 - ✅ **Responsive design:** Hoạt động mượt mà trên mọi thiết bị- 🛒 Giỏ hàng và quản lý đơn hàng
 
-- ✅ **Bảo mật cao:** JWT Authentication + Bcrypt password hashing
+### ⚙️ Admin Panel
 
-- ✅ **Containerized:** Docker-ready cho deployment dễ dàng- 💳 Thanh toán online qua Stripe hoặc COD### 👥 Frontend - Giao diện Khách hàng
+- 📊 Dashboard tổng quan- ✅ **Bảo mật cao:** JWT Authentication + Bcrypt password hashing
+
+- 🍽️ Quản lý món ăn (CRUD)
+
+- 📦 Quản lý đơn hàng- ✅ **Containerized:** Docker-ready cho deployment dễ dàng- 💳 Thanh toán online qua Stripe hoặc COD### 👥 Frontend - Giao diện Khách hàng
+
+- 👥 Quản lý người dùng
 
 - ✅ **CI/CD:** GitHub Actions tự động build và test
 
-- 📦 Theo dõi trạng thái đơn hàng real-time
+### 🏪 Restaurant Panel
 
-### 🏗️ Kiến trúc hệ thống
+- 🍽️ Quản lý đơn hàng (Kanban board)- 📦 Theo dõi trạng thái đơn hàng real-time
+
+- 🔔 Thông báo đơn mới (có âm thanh)
+
+- 🔄 Toggle bật/tắt món 1 click### 🏗️ Kiến trúc hệ thống
+
+- 🏪 Quản lý cửa hàng
 
 ```- 👤 Đăng ký/Đăng nhập với JWT authentication- 🏠 Trang chủ với danh sách món ăn
 
+---
+
 ┌─────────────────────────────────────────────────────────────┐
+
+## 🔧 Tech Stack
 
 │                     FOOD DELIVERY SYSTEM                     │
 
-└─────────────────────────────────────────────────────────────┘
+| Layer | Tech |
 
-                              │### ⚙️ Admin Panel - Giao diện Quản trị- 🍽️ **Nút "All"** nổi bật để xem tất cả món (dễ quay lại sau khi lọc)## 📋 Tính năng chính## Demo
+|-------|------|└─────────────────────────────────────────────────────────────┘
 
-        ┌─────────────────────┼─────────────────────┐
+| Frontend | React 18, Vite, React Router v6 |
 
-        │                     │                     │- 📊 Dashboard tổng quan (doanh thu, đơn hàng, thống kê)
+| Backend | Node.js 18+, Express.js |                              │### ⚙️ Admin Panel - Giao diện Quản trị- 🍽️ **Nút "All"** nổi bật để xem tất cả món (dễ quay lại sau khi lọc)## 📋 Tính năng chính## Demo
 
-   [Frontend]            [Admin Panel]      [Restaurant Panel]
+| Database | MongoDB, Mongoose |
 
-   Port: 5174            Port: 5175          Port: 5176- ➕ Thêm món ăn mới- 🔍 Lọc món theo 8 danh mục (Salad, Rolls, Deserts, Sandwich, Cake, Pure Veg, Pasta, Noodles)
+| Auth | JWT, Bcrypt |        ┌─────────────────────┼─────────────────────┐
 
-   React + Vite          React + Vite        React + Vite
+| Payment | Stripe |
 
-        │                     │                     │- ✏️ Sửa món ăn (tên, giá, mô tả, ảnh, category)
+| DevOps | Docker, GitHub Actions |        │                     │                     │- 📊 Dashboard tổng quan (doanh thu, đơn hàng, thống kê)
 
-        └─────────────────────┴─────────────────────┘
 
-                              │- 🗑️ Xóa món ăn- 🛒 Giỏ hàng và quản lý đơn hàng
 
-                        [Backend API]
+---   [Frontend]            [Admin Panel]      [Restaurant Panel]
 
-                        Port: 4000- 📋 Quản lý danh sách món ăn
 
-                     Node.js + Express
 
-                              │- 📦 Quản lý tất cả đơn hàng- 💳 Thanh toán online qua Stripe
+## 📦 Cài đặt thủ công   Port: 5174            Port: 5175          Port: 5176- ➕ Thêm món ăn mới- 🔍 Lọc món theo 8 danh mục (Salad, Rolls, Deserts, Sandwich, Cake, Pure Veg, Pasta, Noodles)
 
-                        [MongoDB]
 
-                        Port: 27018- 👥 Quản lý người dùng
 
-                    NoSQL Database
+Xem hướng dẫn chi tiết tại **[SETUP_GUIDE.md](SETUP_GUIDE.md)**   React + Vite          React + Vite        React + Vite
 
-```- 🔐 Phân quyền Admin- 📦 Theo dõi trạng thái đơn hàng real-time### 👥 Frontend - Giao diện Khách hàng- User Panel: [https://food-delivery-frontend-s2l9.onrender.com/](https://food-delivery-frontend-s2l9.onrender.com/)
+
+
+---        │                     │                     │- ✏️ Sửa món ăn (tên, giá, mô tả, ảnh, category)
+
+
+
+## 📚 Tài liệu        └─────────────────────┴─────────────────────┘
+
+
+
+- **[SETUP_GUIDE.md](SETUP_GUIDE.md)** - Cài đặt chi tiết & troubleshooting                              │- 🗑️ Xóa món ăn- 🛒 Giỏ hàng và quản lý đơn hàng
+
+- **[PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md)** - Kiến trúc hệ thống
+
+- **[restaurant/README.md](restaurant/README.md)** - Chi tiết Restaurant Panel                        [Backend API]
+
+
+
+---                        Port: 4000- 📋 Quản lý danh sách món ăn
+
+
+
+## 🐛 Lỗi thường gặp                     Node.js + Express
+
+
+
+**JWT invalid signature:**                              │- 📦 Quản lý tất cả đơn hàng- 💳 Thanh toán online qua Stripe
+
+```javascript
+
+localStorage.clear();                        [MongoDB]
+
+location.reload();
+
+```                        Port: 27018- 👥 Quản lý người dùng
+
+
+
+**Port đã sử dụng:**                    NoSQL Database
+
+```powershell
+
+netstat -ano | findstr :4000```- 🔐 Phân quyền Admin- 📦 Theo dõi trạng thái đơn hàng real-time### 👥 Frontend - Giao diện Khách hàng- User Panel: [https://food-delivery-frontend-s2l9.onrender.com/](https://food-delivery-frontend-s2l9.onrender.com/)
+
+taskkill /PID <PID> /F
+
+```
+
+
+
+Xem thêm tại [SETUP_GUIDE.md](SETUP_GUIDE.md)---
 
 
 
@@ -102,15 +206,24 @@ Xây dựng một nền tảng giao đồ ăn trực tuyến toàn diện, cho p
 
 
 
-## 🎬 Demo & Screenshots### 🏪 Restaurant Panel - Giao diện Nhà hàng- 👤 Đăng ký/Đăng nhập với JWT authentication
+## 📞 Liên hệ## 🎬 Demo & Screenshots### 🏪 Restaurant Panel - Giao diện Nhà hàng- 👤 Đăng ký/Đăng nhập với JWT authentication
 
 
 
-### 👥 Frontend - Giao diện Khách hàng- 📊 Dashboard thống kê riêng
+**Phamtinhicic**
+
+- GitHub: [@Phamtinhicic](https://github.com/Phamtinhicic)
+
+- Repo: [food_delivery_main](https://github.com/Phamtinhicic/food_delivery_main)### 👥 Frontend - Giao diện Khách hàng- 📊 Dashboard thống kê riêng
 
 
 
-#### 🏠 Trang chủ (Home Page)- 🍽️ Quản lý đơn hàng (Kanban board với 5 trạng thái)- 🏠 Trang chủ với danh sách món ăn- Admin Panel: [https://food-delivery-admin-wrme.onrender.com/](https://food-delivery-admin-wrme.onrender.com/)
+---
+
+
+
+**Made with ❤️ using MERN Stack**#### 🏠 Trang chủ (Home Page)- 🍽️ Quản lý đơn hàng (Kanban board với 5 trạng thái)- 🏠 Trang chủ với danh sách món ăn- Admin Panel: [https://food-delivery-admin-wrme.onrender.com/](https://food-delivery-admin-wrme.onrender.com/)
+
 
 Hiển thị danh sách món ăn đa dạng với giao diện hiện đại, dễ sử dụng.
 
