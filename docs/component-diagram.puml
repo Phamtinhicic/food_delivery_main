@@ -1,193 +1,162 @@
 @startuml Food_Delivery_Component_Diagram
-!define COMPONENT_COLOR #E8F5E9
-!define INTERFACE_COLOR #FFF3E0
-!define DATABASE_COLOR #E3F2FD
+!theme plain
 
-title Food Delivery System - Component Diagram
+title Food Delivery System - Component Diagram (Simplified)
 
+skinparam componentStyle rectangle
 skinparam component {
-    BackgroundColor COMPONENT_COLOR
-    BorderColor #4CAF50
-    FontSize 12
-}
-
-skinparam interface {
-    BackgroundColor INTERFACE_COLOR
-    BorderColor #FF9800
+    BackgroundColor LightBlue
+    BorderColor Black
+    FontSize 13
+    FontStyle bold
 }
 
 skinparam database {
-    BackgroundColor DATABASE_COLOR
-    BorderColor #2196F3
+    BackgroundColor LightYellow
+    BorderColor Black
 }
 
-skinparam note {
-    BackgroundColor #FFF9C4
-    BorderColor #FBC02D
+skinparam cloud {
+    BackgroundColor LightGreen
+    BorderColor Black
 }
 
-' External Actors
-actor Customer as customer
-actor Admin as admin
-actor Restaurant_Staff as staff
-actor "Stripe Payment\nGateway" as stripe
-
-' Frontend Components
-package "Frontend Layer" {
-    component "Customer UI\n(React + Vite)" as frontend_ui {
-        component "Home Page" as home
-        component "Menu Display" as menu_display
-        component "Cart Management" as cart
-        component "Order Tracking" as order_track
-        component "Payment Integration" as payment
-    }
-    
-    component "Admin Panel\n(React + Vite)" as admin_ui {
-        component "Dashboard" as admin_dash
-        component "Food Management" as food_mgmt
-        component "Order Management" as order_mgmt
-        component "User Management" as user_mgmt
-    }
-    
-    component "Restaurant Panel\n(React + Vite)" as restaurant_ui {
-        component "Order Kanban" as order_kanban
-        component "Menu Viewer" as menu_viewer
-    }
+skinparam rectangle {
+    BackgroundColor WhiteSmoke
+    BorderColor Black
 }
 
-' Backend Components
-package "Backend Layer" {
-    component "API Gateway\n(Express.js)" as api_gateway {
-        component "Authentication\nMiddleware" as auth_middleware
-        component "CORS Handler" as cors
-        component "Multer Upload" as multer
-    }
-    
-    component "Food Service" as food_service {
-        component "Food Controller" as food_controller
-        component "Food Routes" as food_routes
-    }
-    
-    component "Order Service" as order_service {
-        component "Order Controller" as order_controller
-        component "Order Routes" as order_routes
-    }
-    
-    component "User Service" as user_service {
-        component "User Controller" as user_controller
-        component "User Routes" as user_routes
-    }
-    
-    component "Payment Service" as payment_service {
-        component "Stripe Integration" as stripe_integration
-    }
+' ============================================
+' ACTORS (Người dùng)
+' ============================================
+actor "👤 Customer" as customer
+actor "👨‍💼 Admin" as admin
+actor "👨‍🍳 Restaurant\nStaff" as staff
+
+' ============================================
+' LAYER 1: PRESENTATION (Giao diện)
+' ============================================
+rectangle "PRESENTATION LAYER\n(Port 5174, 5175, 5176)" as presentation_layer {
+    [Customer UI\nReact + Vite\nPort: 5174] as frontend
+    [Admin UI\nReact + Vite\nPort: 5175] as admin_ui
+    [Restaurant UI\nReact + Vite\nPort: 5176] as restaurant_ui
 }
 
-' Database Component
-database "MongoDB\nDatabase" as mongodb {
-    component "Users Collection" as users_col
-    component "Foods Collection" as foods_col
-    component "Orders Collection" as orders_col
+' ============================================
+' LAYER 2: BUSINESS LOGIC (Backend)
+' ============================================
+rectangle "BUSINESS LOGIC LAYER\n(Port 4000)" as business_layer {
+    [API Gateway\nExpress.js + JWT] as gateway
+    
+    [Food Service\n- Add/Edit/Delete\n- List/Filter] as food_service
+    [Order Service\n- Create Order\n- Track Status] as order_service
+    [User Service\n- Register/Login\n- Profile] as user_service
+    [Payment Service\n- Stripe Integration] as payment_service
 }
 
-' File Storage
-component "File Storage\n(uploads/images)" as file_storage
+' ============================================
+' LAYER 3: DATA (Database & Storage)
+' ============================================
+rectangle "DATA LAYER" as data_layer {
+    database "MongoDB\nPort: 27017\n\n- users\n- foods\n- orders" as mongodb
+    [File Storage\nuploads/images/] as storage
+}
 
-' Interfaces
-interface "HTTP REST API\n(Port 4000)" as rest_api
-interface "MongoDB Protocol\n(Port 27017)" as mongo_protocol
-interface "Stripe API\n(HTTPS)" as stripe_api
-interface "Static Files\n(HTTP)" as static_files
+' ============================================
+' EXTERNAL SERVICES
+' ============================================
+cloud "Stripe\nPayment Gateway" as stripe
 
-' Customer relationships
-customer --> frontend_ui : "Browse & Order"
-frontend_ui ..> rest_api : "<<uses>>\nHTTP Requests"
+' ============================================
+' RELATIONSHIPS: Actors → Presentation
+' ============================================
+customer --> frontend : Browse & Order
+admin --> admin_ui : Manage System
+staff --> restaurant_ui : Process Orders
 
-' Admin relationships
-admin --> admin_ui : "Manage System"
-admin_ui ..> rest_api : "<<uses>>\nHTTP Requests"
+' ============================================
+' RELATIONSHIPS: Presentation → Business
+' ============================================
+frontend --> gateway : HTTP REST
+admin_ui --> gateway : HTTP REST
+restaurant_ui --> gateway : HTTP REST
 
-' Restaurant Staff relationships
-staff --> restaurant_ui : "View & Process"
-restaurant_ui ..> rest_api : "<<uses>>\nHTTP Requests"
+' ============================================
+' RELATIONSHIPS: Business → Services
+' ============================================
+gateway --> food_service
+gateway --> order_service
+gateway --> user_service
+gateway --> payment_service
 
-' REST API connections
-rest_api -- api_gateway : "<<provides>>"
-api_gateway --> auth_middleware : "<<uses>>"
-api_gateway --> cors : "<<uses>>"
-api_gateway --> multer : "<<uses>>"
+' ============================================
+' RELATIONSHIPS: Services → Data
+' ============================================
+food_service --> mongodb
+order_service --> mongodb
+user_service --> mongodb
 
-' Service connections
-api_gateway --> food_service : "<<delegates>>"
-api_gateway --> order_service : "<<delegates>>"
-api_gateway --> user_service : "<<delegates>>"
-api_gateway --> payment_service : "<<delegates>>"
+gateway --> storage : Upload Images
 
-' Controller connections
-food_service --> food_controller
-food_service --> food_routes
-order_service --> order_controller
-order_service --> order_routes
-user_service --> user_controller
-user_service --> user_routes
+' ============================================
+' RELATIONSHIPS: External
+' ============================================
+payment_service --> stripe : Process Payment
+frontend <.. stripe : Callback
+frontend --> storage : Load Images
 
-' Database connections
-food_controller ..> mongo_protocol : "<<uses>>"
-order_controller ..> mongo_protocol : "<<uses>>"
-user_controller ..> mongo_protocol : "<<uses>>"
-
-mongo_protocol -- mongodb : "<<provides>>"
-mongodb --> users_col
-mongodb --> foods_col
-mongodb --> orders_col
-
-' Payment connections
-payment_service --> stripe_integration
-stripe_integration ..> stripe_api : "<<uses>>"
-stripe_api -- stripe : "<<connects>>"
-
-' File storage
-multer --> file_storage : "<<writes>>"
-frontend_ui ..> static_files : "<<reads>>\nFood Images"
-static_files -- file_storage : "<<serves>>"
-
-' Notes
-note right of frontend_ui
-  **Ports:**
-  - Customer: 5174
-  - Admin: 5175
-  - Restaurant: 5176
+' ============================================
+' NOTES
+' ============================================
+note right of frontend
+  **Customer Features:**
+  - Browse menu
+  - Add to cart
+  - Place order
+  - Track delivery
+  - Stripe payment
   
-  **Tech:**
-  - React 18
-  - Vite
-  - React Router
-  - Axios
+  **Tech:** React 18, Vite, Axios
 end note
 
-note right of api_gateway
-  **Port:** 4000
+note right of admin_ui
+  **Admin Features:**
+  - Dashboard stats
+  - Add/Edit/Delete food
+  - Manage orders
+  - Manage users
   
-  **Tech:**
-  - Node.js
-  - Express.js
-  - JWT Auth
-  - Bcrypt
+  **Tech:** React 18, Vite
+end note
+
+note right of restaurant_ui
+  **Restaurant Features:**
+  - View orders (Kanban)
+  - View menu (read-only)
+  - Filter by category
   
-  **Features:**
-  - Token validation
-  - Role-based access
-  - File upload
+  **Tech:** React 18, Vite
+end note
+
+note bottom of gateway
+  **API Gateway**
+  Port: 4000
+  
+  **Middleware:**
+  - JWT Authentication
+  - CORS Handler
+  - Multer File Upload
+  
+  **Tech:** Node.js, Express.js
 end note
 
 note bottom of mongodb
-  **Port:** 27017 (internal)
-         27018 (external)
+  **Database**
+  Port: 27017 (internal)
+  Port: 27018 (external)
   
   **Collections:**
-  - users (auth, profile)
-  - foods (menu items)
-  - orders (transactions)
+  users, foods, orders
   
   **Storage:** Docker Volume
 end note
@@ -195,8 +164,8 @@ end note
 note left of stripe
   **External Service**
   
-  Payment processing
-  for online orders
+  Payment Gateway
+  Webhook Support
 end note
 
 @enduml
