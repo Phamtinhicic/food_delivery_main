@@ -1,171 +1,206 @@
 @startuml Food_Delivery_Component_Diagram
-!theme plain
 
-title Food Delivery System - Component Diagram (Simplified)
+title Food Delivery System - Component Diagram\nNguyễn Quốc Huy - October 20, 2025
 
+' ============================================
+' STYLE CONFIGURATION
+' ============================================
 skinparam componentStyle rectangle
 skinparam component {
+    BackgroundColor LightYellow
+    BorderColor Black
+    FontSize 11
+}
+
+skinparam interface {
     BackgroundColor LightBlue
     BorderColor Black
-    FontSize 13
-    FontStyle bold
+}
+
+skinparam package {
+    BackgroundColor WhiteSmoke
+    BorderColor Black
+    FontSize 12
 }
 
 skinparam database {
-    BackgroundColor LightYellow
-    BorderColor Black
-}
-
-skinparam cloud {
     BackgroundColor LightGreen
     BorderColor Black
 }
 
-skinparam rectangle {
-    BackgroundColor WhiteSmoke
-    BorderColor Black
+' ============================================
+' CLIENT COMPONENTS - React 18 + Vite
+' ============================================
+package "Client Layer" {
+    [Customer UI] as CustomerUI
+    [Admin UI] as AdminUI
+    [Restaurant UI] as RestaurantUI
+    [Client Session] as Session
 }
 
 ' ============================================
-' ACTORS (Người dùng)
+' SERVER COMPONENTS - Node.js + Express
 ' ============================================
-actor "👤 Customer" as customer
-actor "👨‍💼 Admin" as admin
-actor "👨‍🍳 Restaurant\nStaff" as staff
-
-' ============================================
-' LAYER 1: PRESENTATION (Giao diện)
-' ============================================
-rectangle "PRESENTATION LAYER\n(Port 5174, 5175, 5176)" as presentation_layer {
-    [Customer UI\nReact + Vite\nPort: 5174] as frontend
-    [Admin UI\nReact + Vite\nPort: 5175] as admin_ui
-    [Restaurant UI\nReact + Vite\nPort: 5176] as restaurant_ui
+package "Server Layer" {
+    [API Gateway] as Gateway
+    [Authentication Server] as AuthServer
+    [Order Service] as OrderService
+    [Food Service] as FoodService
+    [User Service] as UserService
+    [Server Session] as ServerSession
+    [Payment Service] as PaymentService
 }
 
 ' ============================================
-' LAYER 2: BUSINESS LOGIC (Backend)
+' DATA & EXTERNAL SERVICES
 ' ============================================
-rectangle "BUSINESS LOGIC LAYER\n(Port 4000)" as business_layer {
-    [API Gateway\nExpress.js + JWT] as gateway
-    
-    [Food Service\n- Add/Edit/Delete\n- List/Filter] as food_service
-    [Order Service\n- Create Order\n- Track Status] as order_service
-    [User Service\n- Register/Login\n- Profile] as user_service
-    [Payment Service\n- Stripe Integration] as payment_service
+package "Data Layer" {
+    database MongoDB
+    [File Storage] as FileStorage
+    cloud "Stripe API" as StripeAPI
 }
 
 ' ============================================
-' LAYER 3: DATA (Database & Storage)
+' INTERFACES
 ' ============================================
-rectangle "DATA LAYER" as data_layer {
-    database "MongoDB\nPort: 27017\n\n- users\n- foods\n- orders" as mongodb
-    [File Storage\nuploads/images/] as storage
-}
+interface "REST API" as RestAPI
+interface "MongoDB Protocol" as MongoProtocol
+interface "Stripe Payment API" as StripeInterface
 
 ' ============================================
-' EXTERNAL SERVICES
+' CONNECTIONS
 ' ============================================
-cloud "Stripe\nPayment Gateway" as stripe
+
+' Client Layer Connections
+CustomerUI --> Session
+AdminUI --> Session
+RestaurantUI --> Session
+
+' Client to Server via REST API
+Session --> RestAPI
+RestAPI -- Gateway
+
+' Gateway to Services
+Gateway --> OrderService : route requests
+Gateway --> FoodService : route requests
+Gateway --> UserService : route requests
+Gateway --> PaymentService : route requests
+
+' Authentication Flow
+Gateway --> AuthServer : validate token
+UserService --> AuthServer : create token
+OrderService --> AuthServer : verify auth
+
+' Services to Database
+OrderService --> ServerSession : persist data
+FoodService --> ServerSession : persist data
+UserService --> ServerSession : persist data
+
+' Database Connection
+ServerSession --> MongoProtocol
+MongoProtocol -- MongoDB
+
+' Payment Integration
+PaymentService --> StripeInterface
+StripeInterface -- StripeAPI
+
+' File Operations
+FoodService --> FileStorage : upload images
+CustomerUI ..> FileStorage : load images
+
+' Webhook Callback
+StripeAPI ..> CustomerUI : payment callback
 
 ' ============================================
-' RELATIONSHIPS: Actors → Presentation
+' NOTES - GIẢI THÍCH CHI TIẾT
 ' ============================================
-customer --> frontend : Browse & Order
-admin --> admin_ui : Manage System
-staff --> restaurant_ui : Process Orders
-
-' ============================================
-' RELATIONSHIPS: Presentation → Business
-' ============================================
-frontend --> gateway : HTTP REST
-admin_ui --> gateway : HTTP REST
-restaurant_ui --> gateway : HTTP REST
-
-' ============================================
-' RELATIONSHIPS: Business → Services
-' ============================================
-gateway --> food_service
-gateway --> order_service
-gateway --> user_service
-gateway --> payment_service
-
-' ============================================
-' RELATIONSHIPS: Services → Data
-' ============================================
-food_service --> mongodb
-order_service --> mongodb
-user_service --> mongodb
-
-gateway --> storage : Upload Images
-
-' ============================================
-' RELATIONSHIPS: External
-' ============================================
-payment_service --> stripe : Process Payment
-frontend <.. stripe : Callback
-frontend --> storage : Load Images
-
-' ============================================
-' NOTES
-' ============================================
-note right of frontend
-  **Customer Features:**
-  - Browse menu
-  - Add to cart
-  - Place order
-  - Track delivery
-  - Stripe payment
+note right of CustomerUI
+  **Customer UI - Port 5174**
+  React 18 + Vite
   
-  **Tech:** React 18, Vite, Axios
+  Features:
+  - Browse menu (All + 8 categories)
+  - Shopping cart
+  - Stripe checkout
+  - Order tracking
 end note
 
-note right of admin_ui
-  **Admin Features:**
-  - Dashboard stats
-  - Add/Edit/Delete food
-  - Manage orders
-  - Manage users
+note right of AdminUI
+  **Admin UI - Port 5175**
+  React 18 + Vite
   
-  **Tech:** React 18, Vite
+  Features:
+  - Dashboard analytics
+  - Food CRUD operations
+  - Order management
+  - User management
 end note
 
-note right of restaurant_ui
-  **Restaurant Features:**
-  - View orders (Kanban)
-  - View menu (read-only)
-  - Filter by category
+note right of RestaurantUI
+  **Restaurant UI - Port 5176**
+  React 18 + Vite
   
-  **Tech:** React 18, Vite
+  Features:
+  - Order Kanban (4 statuses)
+  - Menu viewer (read-only)
+  - Category filter with reset
 end note
 
-note bottom of gateway
-  **API Gateway**
-  Port: 4000
+note bottom of Gateway
+  **API Gateway - Port 4000**
+  Node.js 18 + Express.js
   
-  **Middleware:**
-  - JWT Authentication
-  - CORS Handler
-  - Multer File Upload
+  Endpoints:
+  /api/food/* - Food operations
+  /api/order/* - Order processing
+  /api/user/* - User authentication
   
-  **Tech:** Node.js, Express.js
+  Middleware:
+  CORS, JWT Verification, Multer Upload
 end note
 
-note bottom of mongodb
-  **Database**
-  Port: 27017 (internal)
-  Port: 27018 (external)
+note right of OrderService
+  **QUY TRINH DAT HANG:**
   
-  **Collections:**
-  users, foods, orders
-  
-  **Storage:** Docker Volume
+  1. Validate order data
+  2. Authenticate user (JWT)
+  3. Check food availability
+  4. Calculate total amount
+  5. Process Stripe payment
+  6. Create order in MongoDB
+  7. Update food stock
+  8. Return confirmation
 end note
 
-note left of stripe
-  **External Service**
+note right of AuthServer
+  **Authentication Service**
   
-  Payment Gateway
-  Webhook Support
+  - JWT token generation
+  - Password hashing (Bcrypt)
+  - Token validation
+  - Role-based access control
+end note
+
+note bottom of MongoDB
+  **MongoDB - Port 27017**
+  
+  Collections:
+  - users (auth, profile, role)
+  - foods (menu items, stock)
+  - orders (transactions, status)
+  
+  Docker Volume:
+  food_delivery_main_mongodb_data
+end note
+
+note bottom of StripeAPI
+  **Stripe Payment Gateway**
+  
+  Flow:
+  1. Create payment intent
+  2. Process payment
+  3. Webhook callback
+  4. Confirm order
 end note
 
 @enduml
