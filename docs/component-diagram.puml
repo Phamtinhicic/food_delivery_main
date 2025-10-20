@@ -1,0 +1,202 @@
+@startuml Food_Delivery_Component_Diagram
+!define COMPONENT_COLOR #E8F5E9
+!define INTERFACE_COLOR #FFF3E0
+!define DATABASE_COLOR #E3F2FD
+
+title Food Delivery System - Component Diagram
+
+skinparam component {
+    BackgroundColor COMPONENT_COLOR
+    BorderColor #4CAF50
+    FontSize 12
+}
+
+skinparam interface {
+    BackgroundColor INTERFACE_COLOR
+    BorderColor #FF9800
+}
+
+skinparam database {
+    BackgroundColor DATABASE_COLOR
+    BorderColor #2196F3
+}
+
+skinparam note {
+    BackgroundColor #FFF9C4
+    BorderColor #FBC02D
+}
+
+' External Actors
+actor Customer as customer
+actor Admin as admin
+actor Restaurant_Staff as staff
+actor "Stripe Payment\nGateway" as stripe
+
+' Frontend Components
+package "Frontend Layer" {
+    component "Customer UI\n(React + Vite)" as frontend_ui {
+        component "Home Page" as home
+        component "Menu Display" as menu_display
+        component "Cart Management" as cart
+        component "Order Tracking" as order_track
+        component "Payment Integration" as payment
+    }
+    
+    component "Admin Panel\n(React + Vite)" as admin_ui {
+        component "Dashboard" as admin_dash
+        component "Food Management" as food_mgmt
+        component "Order Management" as order_mgmt
+        component "User Management" as user_mgmt
+    }
+    
+    component "Restaurant Panel\n(React + Vite)" as restaurant_ui {
+        component "Order Kanban" as order_kanban
+        component "Menu Viewer" as menu_viewer
+    }
+}
+
+' Backend Components
+package "Backend Layer" {
+    component "API Gateway\n(Express.js)" as api_gateway {
+        component "Authentication\nMiddleware" as auth_middleware
+        component "CORS Handler" as cors
+        component "Multer Upload" as multer
+    }
+    
+    component "Food Service" as food_service {
+        component "Food Controller" as food_controller
+        component "Food Routes" as food_routes
+    }
+    
+    component "Order Service" as order_service {
+        component "Order Controller" as order_controller
+        component "Order Routes" as order_routes
+    }
+    
+    component "User Service" as user_service {
+        component "User Controller" as user_controller
+        component "User Routes" as user_routes
+    }
+    
+    component "Payment Service" as payment_service {
+        component "Stripe Integration" as stripe_integration
+    }
+}
+
+' Database Component
+database "MongoDB\nDatabase" as mongodb {
+    component "Users Collection" as users_col
+    component "Foods Collection" as foods_col
+    component "Orders Collection" as orders_col
+}
+
+' File Storage
+component "File Storage\n(uploads/images)" as file_storage
+
+' Interfaces
+interface "HTTP REST API\n(Port 4000)" as rest_api
+interface "MongoDB Protocol\n(Port 27017)" as mongo_protocol
+interface "Stripe API\n(HTTPS)" as stripe_api
+interface "Static Files\n(HTTP)" as static_files
+
+' Customer relationships
+customer --> frontend_ui : "Browse & Order"
+frontend_ui ..> rest_api : "<<uses>>\nHTTP Requests"
+
+' Admin relationships
+admin --> admin_ui : "Manage System"
+admin_ui ..> rest_api : "<<uses>>\nHTTP Requests"
+
+' Restaurant Staff relationships
+staff --> restaurant_ui : "View & Process"
+restaurant_ui ..> rest_api : "<<uses>>\nHTTP Requests"
+
+' REST API connections
+rest_api -- api_gateway : "<<provides>>"
+api_gateway --> auth_middleware : "<<uses>>"
+api_gateway --> cors : "<<uses>>"
+api_gateway --> multer : "<<uses>>"
+
+' Service connections
+api_gateway --> food_service : "<<delegates>>"
+api_gateway --> order_service : "<<delegates>>"
+api_gateway --> user_service : "<<delegates>>"
+api_gateway --> payment_service : "<<delegates>>"
+
+' Controller connections
+food_service --> food_controller
+food_service --> food_routes
+order_service --> order_controller
+order_service --> order_routes
+user_service --> user_controller
+user_service --> user_routes
+
+' Database connections
+food_controller ..> mongo_protocol : "<<uses>>"
+order_controller ..> mongo_protocol : "<<uses>>"
+user_controller ..> mongo_protocol : "<<uses>>"
+
+mongo_protocol -- mongodb : "<<provides>>"
+mongodb --> users_col
+mongodb --> foods_col
+mongodb --> orders_col
+
+' Payment connections
+payment_service --> stripe_integration
+stripe_integration ..> stripe_api : "<<uses>>"
+stripe_api -- stripe : "<<connects>>"
+
+' File storage
+multer --> file_storage : "<<writes>>"
+frontend_ui ..> static_files : "<<reads>>\nFood Images"
+static_files -- file_storage : "<<serves>>"
+
+' Notes
+note right of frontend_ui
+  **Ports:**
+  - Customer: 5174
+  - Admin: 5175
+  - Restaurant: 5176
+  
+  **Tech:**
+  - React 18
+  - Vite
+  - React Router
+  - Axios
+end note
+
+note right of api_gateway
+  **Port:** 4000
+  
+  **Tech:**
+  - Node.js
+  - Express.js
+  - JWT Auth
+  - Bcrypt
+  
+  **Features:**
+  - Token validation
+  - Role-based access
+  - File upload
+end note
+
+note bottom of mongodb
+  **Port:** 27017 (internal)
+         27018 (external)
+  
+  **Collections:**
+  - users (auth, profile)
+  - foods (menu items)
+  - orders (transactions)
+  
+  **Storage:** Docker Volume
+end note
+
+note left of stripe
+  **External Service**
+  
+  Payment processing
+  for online orders
+end note
+
+@enduml
