@@ -4,3 +4,9 @@ node_modules
 backend/uploads
 admin/node_modules
 frontend/node_modules
+
+# Build outputs
+frontend/dist/
+admin/dist/
+restaurant/dist/
+backend/dist/
