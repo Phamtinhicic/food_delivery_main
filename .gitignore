@@ -10,3 +10,6 @@ frontend/dist/
 admin/dist/
 restaurant/dist/
 backend/dist/
+
+# Documentation (local only)
+docs/
