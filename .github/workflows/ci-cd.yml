@@ -22,12 +22,23 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
-          cache: 'npm'
-          cache-dependency-path: ${{ matrix.service }}/package-lock.json
+
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: ${{ matrix.service }}/node_modules
+          key: ${{ runner.os }}-node-${{ matrix.service }}-${{ hashFiles(format('{0}/package-lock.json', matrix.service)) }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ matrix.service }}-
 
       - name: Install dependencies
         working-directory: ${{ matrix.service }}
-        run: npm install
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --prefer-offline --no-audit
+          else
+            npm install --prefer-offline --no-audit
+          fi
 
       - name: Check for syntax errors
         working-directory: ${{ matrix.service }}
