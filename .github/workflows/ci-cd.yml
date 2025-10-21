@@ -50,6 +50,22 @@ jobs:
             npm -v
           fi
 
+      - name: Run tests
+        working-directory: ${{ matrix.service }}
+        run: |
+          if npm run | grep -q "test"; then
+            echo "Running tests for ${{ matrix.service }}..."
+            npm test
+          else
+            echo "No test script found, skipping..."
+          fi
+        continue-on-error: false
+        env:
+          NODE_ENV: test
+          MONGO_URI: mongodb://localhost:27017/FoodDeliveryTest
+          JWT_SECRET: test_secret_key_for_ci
+          SALT: 10
+
       - name: Build (if build script exists)
         working-directory: ${{ matrix.service }}
         run: |
