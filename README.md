@@ -356,6 +356,7 @@ food_delivery_main/
 - ✅ Cải thiện filter menu với nút "Tất cả món" và "Xóa bộ lọc"
 - ✅ Cập nhật ERD diagram phù hợp với source code thực tế
 - ✅ Làm sạch documentation, loại bỏ thông tin duplicate
+- ✅ Thêm Jest test cases và CI/CD integration
 
 ---
 
