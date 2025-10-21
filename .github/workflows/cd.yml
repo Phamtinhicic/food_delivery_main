@@ -1,0 +1,130 @@
+name: CD - Continuous Deployment
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Cho phép trigger manual
+
+jobs:
+  docker-build-push:
+    name: Build and Push Docker Images
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [backend, frontend, admin, restaurant]
+      fail-fast: false
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/food-delivery-${{ matrix.service }}
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix={{branch}}-
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./${{ matrix.service }}
+          file: ./${{ matrix.service }}/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/food-delivery-${{ matrix.service }}:latest
+          cache-to: type=inline
+
+      - name: Image digest
+        run: |
+          echo "================================"
+          echo "✅ Image pushed successfully!"
+          echo "================================"
+          echo "Service: ${{ matrix.service }}"
+          echo "Tags: ${{ steps.meta.outputs.tags }}"
+          echo ""
+
+  deployment-notification:
+    name: Deployment Summary
+    runs-on: ubuntu-latest
+    needs: docker-build-push
+    if: success()
+    
+    steps:
+      - name: Deployment Success
+        run: |
+          echo "================================"
+          echo "🚀 DEPLOYMENT SUCCESSFUL!"
+          echo "================================"
+          echo ""
+          echo "✅ All Docker images have been built and pushed to Docker Hub"
+          echo ""
+          echo "📦 Available images:"
+          echo "   - ${{ secrets.DOCKERHUB_USERNAME }}/food-delivery-backend:latest"
+          echo "   - ${{ secrets.DOCKERHUB_USERNAME }}/food-delivery-frontend:latest"
+          echo "   - ${{ secrets.DOCKERHUB_USERNAME }}/food-delivery-admin:latest"
+          echo "   - ${{ secrets.DOCKERHUB_USERNAME }}/food-delivery-restaurant:latest"
+          echo ""
+          echo "🔗 Docker Hub: https://hub.docker.com/u/${{ secrets.DOCKERHUB_USERNAME }}"
+          echo ""
+          echo "📝 To deploy these images:"
+          echo "   docker pull ${{ secrets.DOCKERHUB_USERNAME }}/food-delivery-backend:latest"
+          echo "   docker-compose -f docker-compose.production.yml up -d"
+          echo ""
+          echo "================================"
+      
+      # Uncomment để deploy tới các platform cụ thể:
+      
+      # - name: Deploy to Railway
+      #   uses: berviantoleo/railway-deploy@main
+      #   with:
+      #     railway_token: ${{ secrets.RAILWAY_TOKEN }}
+      #     service: food-delivery
+      
+      # - name: Deploy to Render
+      #   run: |
+      #     curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
+      
+      # - name: Notify via Slack
+      #   uses: 8398a7/action-slack@v3
+      #   with:
+      #     status: ${{ job.status }}
+      #     text: 'Deployment completed successfully! 🎉'
+      #     webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+      #   if: always()
+
+  deployment-failure:
+    name: Deployment Failed
+    runs-on: ubuntu-latest
+    needs: docker-build-push
+    if: failure()
+    
+    steps:
+      - name: Deployment Failure Notification
+        run: |
+          echo "================================"
+          echo "❌ DEPLOYMENT FAILED!"
+          echo "================================"
+          echo ""
+          echo "Please check the workflow logs for details."
+          echo "Common issues:"
+          echo "  - Docker Hub credentials incorrect"
+          echo "  - Dockerfile syntax errors"
+          echo "  - Build context issues"
+          echo ""
+          echo "🔍 View logs: https://github.com/${{ github.repository }}/actions"
+          echo ""
