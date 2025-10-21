@@ -99,6 +99,8 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+          # Alternative: Use password if token doesn't work
+          # password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
       - name: Extract metadata for Docker
         id: meta
