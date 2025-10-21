@@ -1,0 +1,90 @@
+version: '3.8'
+
+# Production Docker Compose
+# Sử dụng images từ Docker Hub thay vì build local
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:latest
+    container_name: food_delivery_mongodb_prod
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: FoodDelivery
+    networks:
+      - food_delivery_network
+
+  # Backend API
+  backend:
+    image: ${DOCKERHUB_USERNAME}/food-delivery-backend:latest
+    container_name: food_delivery_backend_prod
+    restart: always
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=production
+      - MONGO_URI=mongodb://mongodb:27017/FoodDelivery
+      - JWT_SECRET=${JWT_SECRET}
+      - SALT=${SALT}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - FRONTEND_URL=${FRONTEND_URL}
+    depends_on:
+      - mongodb
+    networks:
+      - food_delivery_network
+    volumes:
+      - ./backend/uploads:/app/uploads
+
+  # Customer Frontend
+  frontend:
+    image: ${DOCKERHUB_USERNAME}/food-delivery-frontend:latest
+    container_name: food_delivery_frontend_prod
+    restart: always
+    ports:
+      - "5174:80"
+    environment:
+      - VITE_API_URL=${API_URL}
+    depends_on:
+      - backend
+    networks:
+      - food_delivery_network
+
+  # Admin Panel
+  admin:
+    image: ${DOCKERHUB_USERNAME}/food-delivery-admin:latest
+    container_name: food_delivery_admin_prod
+    restart: always
+    ports:
+      - "5175:80"
+    environment:
+      - VITE_API_URL=${API_URL}
+    depends_on:
+      - backend
+    networks:
+      - food_delivery_network
+
+  # Restaurant Panel
+  restaurant:
+    image: ${DOCKERHUB_USERNAME}/food-delivery-restaurant:latest
+    container_name: food_delivery_restaurant_prod
+    restart: always
+    ports:
+      - "5176:80"
+    environment:
+      - VITE_API_URL=${API_URL}
+    depends_on:
+      - backend
+    networks:
+      - food_delivery_network
+
+networks:
+  food_delivery_network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local

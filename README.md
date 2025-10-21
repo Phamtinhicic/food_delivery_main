@@ -152,7 +152,9 @@ docker-compose up -d
 - ✅ **Responsive design:** Hoạt động mượt mà trên mọi thiết bị
 - ✅ **Bảo mật cao:** JWT Authentication + Bcrypt password hashing
 - ✅ **Containerized:** Docker-ready cho deployment dễ dàng
-- ✅ **CI/CD:** GitHub Actions tự động build và test
+- ✅ **CI/CD Pipeline:** GitHub Actions tự động test, build và deploy
+- ✅ **Unit Tests:** 23 test cases cho backend logic
+- ✅ **Production Ready:** Docker images trên Docker Hub
 
 ---
 
@@ -244,7 +246,9 @@ STRIPE_SECRET_KEY=sk_test_your_key_here
 
 - **[SETUP_GUIDE.md](SETUP_GUIDE.md)** - Hướng dẫn cài đặt chi tiết, xử lý lỗi, quản lý database
 - **[PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md)** - Tổng quan kiến trúc hệ thống
+- **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Hướng dẫn CI/CD và deployment
 - **[restaurant/README.md](restaurant/README.md)** - Chi tiết về Restaurant Panel
+- **[backend/tests/README.md](backend/tests/README.md)** - Hướng dẫn chạy tests
 
 ---
 
