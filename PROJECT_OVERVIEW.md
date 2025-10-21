@@ -12,59 +12,161 @@
 
 ```
 food_delivery_main/
-├── frontend/          # 👥 Giao diện khách hàng (Port 5173)
-│   ├── src/
-│   │   ├── pages/
-│   │   │   ├── Home/          # Trang chủ
-│   │   │   ├── Cart/          # Giỏ hàng
-│   │   │   ├── PlaceOrder/    # Đặt hàng
-│   │   │   ├── MyOrders/      # Đơn hàng của tôi
-│   │   │   └── Verify/        # Xác thực thanh toán
-│   │   ├── components/
-│   │   │   ├── Navbar/
-│   │   │   ├── Header/
-│   │   │   ├── ExploreMenu/
-│   │   │   ├── FoodDisplay/
-│   │   │   ├── FoodItem/
-│   │   │   ├── Footer/
-│   │   │   └── LoginPopup/
-│   │   └── context/
-│   │       └── StoreContext.jsx
-│   └── package.json
+├── 📁 .github/
+│   └── workflows/
+│       └── ci-cd.yml          # GitHub Actions CI/CD Pipeline
 │
-├── restaurant/        # 🏪 Giao diện nhà hàng (Port 5176)
+├── 📁 backend/                # 🔧 Backend API (Port 4000)
+│   ├── config/
+│   │   └── db.js              # MongoDB connection
+│   ├── controllers/
+│   │   ├── cartController.js  # Giỏ hàng logic
+│   │   ├── foodController.js  # Món ăn logic
+│   │   ├── orderController.js # Đơn hàng logic
+│   │   └── userController.js  # User authentication
+│   ├── middleware/
+│   │   └── auth.js            # JWT authentication middleware
+│   ├── models/
+│   │   ├── foodModel.js       # Food schema
+│   │   ├── orderModel.js      # Order schema
+│   │   └── userModel.js       # User schema
+│   ├── routes/
+│   │   ├── cartRoute.js
+│   │   ├── foodRoute.js
+│   │   ├── orderRoute.js
+│   │   └── userRoute.js
+│   ├── scripts/
+│   │   └── createAdmin.js     # Script tạo admin account
+│   ├── tests/                 # ✅ Jest Unit Tests
+│   │   ├── user.test.js       # 10 user tests
+│   │   ├── food.test.js       # 13 food tests
+│   │   └── README.md
+│   ├── uploads/               # Ảnh món ăn được upload
+│   ├── .env                   # Environment variables
+│   ├── Dockerfile             # Docker config
+│   ├── jest.config.js         # Jest configuration
+│   ├── package.json
+│   └── server.js              # Express server
+│
+├── 📁 frontend/               # 👥 Giao diện khách hàng (Port 5174)
+│   ├── public/
+│   │   ├── screenshots/       # 📸 App screenshots
+│   │   ├── header_img.png
+│   │   └── vite.svg
 │   ├── src/
-│   │   ├── pages/
-│   │   │   ├── Dashboard/         # Tổng quan doanh thu
-│   │   │   ├── OrderManagement/   # Quản lý đơn hàng (Kanban)
-│   │   │   ├── MenuManagement/    # Quản lý thực đơn
-│   │   │   └── StoreManagement/   # Quản lý cửa hàng
+│   │   ├── assets/
+│   │   │   └── frontend_assets/
+│   │   │       └── assets.js
 │   │   ├── components/
+│   │   │   ├── AppDownload/
+│   │   │   ├── ExploreMenu/   # Menu categories
+│   │   │   ├── FoodDisplay/   # Hiển thị món ăn
+│   │   │   ├── FoodItem/      # Card món ăn
+│   │   │   ├── Footer/
+│   │   │   ├── Header/        # Hero banner
+│   │   │   ├── LoginPopup/    # Login modal
+│   │   │   └── Navbar/
+│   │   ├── context/
+│   │   │   └── StoreContext.jsx  # Global state
+│   │   ├── pages/
+│   │   │   ├── Cart/          # Giỏ hàng
+│   │   │   ├── Home/          # Trang chủ
+│   │   │   ├── MyOrders/      # Đơn hàng của tôi
+│   │   │   ├── PlaceOrder/    # Đặt hàng & thanh toán
+│   │   │   └── Verify/        # Xác thực thanh toán Stripe
+│   │   ├── App.jsx
+│   │   ├── index.css
+│   │   └── main.jsx
+│   ├── .eslintrc.cjs
+│   ├── Dockerfile
+│   ├── index.html
+│   ├── nginx.conf             # Nginx for production
+│   ├── package.json
+│   └── vite.config.js
+│
+├── 📁 restaurant/             # 🏪 Giao diện nhà hàng (Port 5176)
+│   ├── public/
+│   ├── src/
+│   │   ├── assets/
+│   │   │   └── assets.js
+│   │   ├── components/
+│   │   │   ├── ProtectedRoute.jsx  # Auth guard
+│   │   │   ├── Login/
 │   │   │   ├── Navbar/
 │   │   │   └── Sidebar/
-│   │   └── assets/
-│   └── package.json
-│
-├── admin/             # ⚙️ Giao diện quản trị (Port 5175)
-│   ├── src/
+│   │   ├── context/
+│   │   │   └── StoreContext.jsx
 │   │   ├── pages/
-│   │   │   ├── Add/           # Thêm món (cho admin tổng)
-│   │   │   ├── List/          # Danh sách món
-│   │   │   └── Orders/        # Quản lý tất cả đơn hàng
-│   │   ├── components/
-│   │   │   ├── Navbar/
-│   │   │   ├── Sidebar/
-│   │   │   └── Login/
-│   │   └── context/
-│   └── package.json
+│   │   │   ├── Dashboard/         # 📊 Tổng quan doanh thu
+│   │   │   ├── MenuManagement/    # 🍽️ Quản lý thực đơn
+│   │   │   ├── OrderManagement/   # 📦 Quản lý đơn hàng (Kanban)
+│   │   │   ├── StoreManagement/   # 🏪 Quản lý cửa hàng
+│   │   │   └── index.js
+│   │   ├── App.jsx
+│   │   ├── index.css
+│   │   └── main.jsx
+│   ├── Dockerfile
+│   ├── index.html
+│   ├── nginx.conf
+│   ├── package.json
+│   ├── README.md
+│   └── vite.config.js
 │
-└── backend/           # 🔧 Backend API (Port 4000)
-    ├── controllers/
-    ├── models/
-    ├── routes/
-    ├── middleware/
-    ├── config/
-    └── server.js
+├── 📁 admin/                  # ⚙️ Giao diện quản trị (Port 5175)
+│   ├── public/
+│   ├── src/
+│   │   ├── assets/
+│   │   │   └── assets.js
+│   │   ├── components/
+│   │   │   ├── Login/
+│   │   │   │   ├── Login.jsx
+│   │   │   │   └── Login.css
+│   │   │   ├── Navbar/
+│   │   │   │   ├── Navbar.jsx
+│   │   │   │   └── Navbar.css
+│   │   │   └── Sidebar/
+│   │   │       ├── Sidebar.jsx
+│   │   │       └── Sidebar.css
+│   │   ├── context/
+│   │   │   └── StoreContext.jsx
+│   │   ├── pages/
+│   │   │   ├── Add/           # ➕ Thêm món mới
+│   │   │   │   ├── Add.jsx
+│   │   │   │   └── Add.css
+│   │   │   ├── Dashboard/     # 📊 Dashboard tổng quan
+│   │   │   │   ├── Dashboard.jsx
+│   │   │   │   └── Dashboard.css
+│   │   │   ├── List/          # 📝 Danh sách món
+│   │   │   │   ├── List.jsx
+│   │   │   │   └── List.css
+│   │   │   ├── Orders/        # 📦 Quản lý đơn hàng
+│   │   │   │   ├── Orders.jsx
+│   │   │   │   └── Orders.css
+│   │   │   └── Users/         # 👥 Quản lý users
+│   │   │       ├── Users.jsx
+│   │   │       └── Users.css
+│   │   ├── App.jsx
+│   │   ├── index.css
+│   │   └── main.jsx
+│   ├── .eslintrc.cjs
+│   ├── Dockerfile
+│   ├── index.html
+│   ├── nginx.conf
+│   ├── package.json
+│   └── vite.config.js
+│
+├── 📄 .env                    # Local environment variables
+├── 📄 .env.example            # Env template
+├── � .env.production.example # Production env template
+├── 📄 .gitignore
+├── 📄 docker-compose.yml      # Docker Compose for local dev
+├── 📄 docker-compose-with-ui.yml  # Docker Compose with Mongo Express
+├── 📄 docker-compose.production.yml  # Production compose (Docker Hub images)
+├── 📄 DEPLOYMENT_GUIDE.md     # 📚 Hướng dẫn deploy
+├── 📄 DOCUMENTATION_UPDATE.md
+├── 📄 PROJECT_OVERVIEW.md     # 📖 Tài liệu này
+├── 📄 README.md               # 📖 README chính
+└── 📄 SETUP_GUIDE.md          # 🚀 Hướng dẫn setup
 ```
 
 ## 🎭 Phân biệt 3 giao diện

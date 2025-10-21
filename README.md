@@ -338,15 +338,99 @@ docker-compose down -v
 
 ```bash
 food_delivery_main/
-├── frontend/          # React app cho khách hàng (port 5174)
-├── admin/             # React app cho admin (port 5175)
-├── restaurant/        # React app cho nhà hàng (port 5176)
-├── backend/           # Node.js + Express API (port 4000)
-├── docs/              # Tài liệu & Screenshots
-├── .github/           # CI/CD workflows
-├── docker-compose.yml # Docker orchestration
-├── README.md          # File này
-└── SETUP_GUIDE.md     # Hướng dẫn chi tiết
+├── 📁 .github/
+│   └── workflows/
+│       └── ci-cd.yml              # GitHub Actions CI/CD Pipeline
+│
+├── 📁 backend/                    # 🔧 Node.js API (port 4000)
+│   ├── config/                    # Database & configs
+│   ├── controllers/               # Business logic
+│   │   ├── cartController.js
+│   │   ├── foodController.js
+│   │   ├── orderController.js
+│   │   └── userController.js
+│   ├── middleware/                # Auth & validators
+│   ├── models/                    # Mongoose schemas
+│   │   ├── foodModel.js
+│   │   ├── orderModel.js
+│   │   └── userModel.js
+│   ├── routes/                    # API endpoints
+│   ├── tests/                     # ✅ Jest unit tests (23 tests)
+│   │   ├── user.test.js
+│   │   └── food.test.js
+│   ├── uploads/                   # Uploaded images
+│   ├── .env
+│   ├── Dockerfile
+│   ├── jest.config.js
+│   └── server.js
+│
+├── 📁 frontend/                   # 👥 React app khách hàng (port 5174)
+│   ├── public/
+│   │   └── screenshots/           # 📸 App screenshots
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── Navbar/
+│   │   │   ├── Header/
+│   │   │   ├── ExploreMenu/
+│   │   │   ├── FoodDisplay/
+│   │   │   ├── FoodItem/
+│   │   │   ├── Footer/
+│   │   │   └── LoginPopup/
+│   │   ├── pages/
+│   │   │   ├── Home/
+│   │   │   ├── Cart/
+│   │   │   ├── PlaceOrder/
+│   │   │   ├── MyOrders/
+│   │   │   └── Verify/
+│   │   ├── context/
+│   │   │   └── StoreContext.jsx
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   ├── Dockerfile
+│   ├── nginx.conf
+│   └── vite.config.js
+│
+├── 📁 admin/                      # ⚙️ React app admin (port 5175)
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── Login/
+│   │   │   ├── Navbar/
+│   │   │   └── Sidebar/
+│   │   ├── pages/
+│   │   │   ├── Add/               # Thêm món
+│   │   │   ├── List/              # Danh sách món
+│   │   │   ├── Orders/            # Quản lý đơn hàng
+│   │   │   ├── Users/             # Quản lý users
+│   │   │   └── Dashboard/         # Tổng quan
+│   │   └── context/
+│   ├── Dockerfile
+│   └── vite.config.js
+│
+├── 📁 restaurant/                 # 🏪 React app nhà hàng (port 5176)
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── ProtectedRoute.jsx
+│   │   │   ├── Login/
+│   │   │   ├── Navbar/
+│   │   │   └── Sidebar/
+│   │   ├── pages/
+│   │   │   ├── Dashboard/         # Tổng quan doanh thu
+│   │   │   ├── OrderManagement/   # Kanban đơn hàng
+│   │   │   ├── MenuManagement/    # Quản lý thực đơn
+│   │   │   └── StoreManagement/   # Quản lý cửa hàng
+│   │   └── context/
+│   ├── Dockerfile
+│   └── README.md
+│
+├── 📄 docker-compose.yml          # Local development
+├── 📄 docker-compose-with-ui.yml  # With Mongo Express UI
+├── 📄 docker-compose.production.yml  # Production deploy
+├── 📄 .env.example
+├── 📄 .env.production.example
+├── 📄 README.md                   # File này
+├── 📄 SETUP_GUIDE.md              # Hướng dẫn setup chi tiết
+├── 📄 PROJECT_OVERVIEW.md         # Tổng quan hệ thống
+└── 📄 DEPLOYMENT_GUIDE.md         # Hướng dẫn CI/CD & deploy
 ```
 
 ---
