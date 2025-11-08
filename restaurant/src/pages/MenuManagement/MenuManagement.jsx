@@ -33,7 +33,7 @@ const MenuManagement = ({ url }) => {
       }
     } catch (error) {
       console.error('Error fetching food list:', error);
-      toast.error('Không thể tải danh sách món ăn');
+      toast.error('Failed to load menu items');
     } finally {
       setLoading(false);
     }
@@ -48,10 +48,7 @@ const MenuManagement = ({ url }) => {
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(amount);
+    return `$${amount.toFixed(2)}`;
   };
 
   if (loading) {
@@ -59,7 +56,7 @@ const MenuManagement = ({ url }) => {
       <div className="menu-management">
         <div className="empty-state">
           <div className="empty-state-icon">⏳</div>
-          <div className="empty-state-text">Đang tải...</div>
+          <div className="empty-state-text">Loading...</div>
         </div>
       </div>
     );
@@ -68,19 +65,19 @@ const MenuManagement = ({ url }) => {
   return (
     <div className="menu-management">
       <div className="menu-header">
-        <h1>🍴 Quản lý Thực đơn (Chỉ xem)</h1>
+        <h1>🍴 Menu Management (View Only)</h1>
       </div>
 
       {/* Category filters */}
       <div className="menu-filters">
         <div className="filter-header">
-          <span className="filter-label">Lọc theo danh mục:</span>
+          <span className="filter-label">Filter by category:</span>
           {selectedCategory !== 'All' && (
             <button 
               className="reset-filter-btn"
               onClick={() => setSelectedCategory('All')}
             >
-              ✕ Xóa bộ lọc
+              ✕ Clear filter
             </button>
           )}
         </div>
@@ -91,7 +88,7 @@ const MenuManagement = ({ url }) => {
               className={`filter-chip ${selectedCategory === category ? 'active' : ''} ${category === 'All' ? 'all-category' : ''}`}
               onClick={() => setSelectedCategory(category)}
             >
-              {category === 'All' ? '📋 Tất cả món' : `🍽️ ${category}`}
+              {category === 'All' ? '📋 All Items' : `🍽️ ${category}`}
               {selectedCategory === category && category !== 'All' && (
                 <span className="active-indicator"> ✓</span>
               )}
@@ -106,8 +103,8 @@ const MenuManagement = ({ url }) => {
           <div className="empty-state-icon">🍽️</div>
           <div className="empty-state-text">
             {selectedCategory === 'All'
-              ? 'Chưa có món ăn nào trong hệ thống'
-              : `Không có món nào trong danh mục "${selectedCategory}"`}
+              ? 'No items in the system yet'
+              : `No items in "${selectedCategory}" category`}
           </div>
         </div>
       ) : (
@@ -141,7 +138,7 @@ const MenuManagement = ({ url }) => {
                   {/* Read-only status display */}
                   <div className="menu-item-status">
                     <span className={`status-badge ${isAvailable ? 'available' : 'unavailable'}`}>
-                      {isAvailable ? '✓ Đang bán' : '✕ Hết hàng'}
+                      {isAvailable ? '✓ Available' : '✕ Out of Stock'}
                     </span>
                   </div>
                 </div>

@@ -5,16 +5,16 @@ import { NavLink } from 'react-router-dom';
 const Sidebar = () => {
   return (
     <div className='sidebar'>
-      <div className="sidebar-section-title">MÀN HÌNH CHÍNH</div>
+      <div className="sidebar-section-title">MAIN MENU</div>
       <div className="sidebar-options">
         <NavLink to='/orders' className="sidebar-option">
           <span>🍽️</span>
-          <p>Quản lý Đơn hàng</p>
+          <p>Order Management</p>
         </NavLink>
         
         <NavLink to='/menu' className="sidebar-option">
           <span>🍴</span>
-          <p>Quản lý Thực đơn</p>
+          <p>Menu Management</p>
         </NavLink>
       </div>
     </div>

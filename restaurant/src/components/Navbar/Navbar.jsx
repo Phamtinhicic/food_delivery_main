@@ -31,28 +31,28 @@ const Navbar = () => {
           🍽️ Restaurant Panel
         </div>
         <div>
-          <div className="navbar-title">Giao diện Nhà hàng</div>
-          <div className="navbar-subtitle">Quản lý đơn hàng & thực đơn</div>
+          <div className="navbar-title">Restaurant Dashboard</div>
+          <div className="navbar-subtitle">Manage Orders & Menu</div>
         </div>
       </div>
       
       <div className="navbar-right">
         <div className={`navbar-status ${storeOpen ? 'open' : 'closed'}`}>
-          {storeOpen ? '✓ Đang mở cửa' : '✕ Đã đóng cửa'}
+          {storeOpen ? '✓ Open' : '✕ Closed'}
         </div>
         
         <div className="navbar-profile">
           <div className="navbar-avatar">👨‍🍳</div>
           <div className="navbar-user-info">
             <div className="navbar-username">Restaurant Owner</div>
-            <div className="navbar-role">Nhà hàng</div>
+            <div className="navbar-role">Restaurant</div>
           </div>
         </div>
         
         {restaurant ? (
-          <button className="navbar-logout" onClick={logout}>Đăng xuất</button>
+          <button className="navbar-logout" onClick={logout}>Logout</button>
         ) : (
-          <button className="navbar-login" onClick={() => navigate("/")}>Đăng nhập</button>
+          <button className="navbar-login" onClick={() => navigate("/")}>Login</button>
         )}
       </div>
     </div>

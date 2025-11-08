@@ -61,7 +61,7 @@ const OrderManagement = ({ url }) => {
   // Update order status
   const updateOrderStatus = async (orderId, newStatus) => {
     if (!token) {
-      toast.error('Vui lòng đăng nhập');
+      toast.error('Please login');
       return;
     }
     try {
@@ -74,17 +74,17 @@ const OrderManagement = ({ url }) => {
       });
       
       if (response.data.success) {
-        toast.success(`Đơn hàng đã được cập nhật: ${newStatus}`);
+        toast.success(`Order updated: ${newStatus}`);
         fetchOrders();
         
         if (newStatus === 'Out for delivery') {
           stopNotificationSound();
         }
       } else {
-        toast.error(response.data.message || 'Lỗi khi cập nhật');
+        toast.error(response.data.message || 'Update failed');
       }
     } catch (error) {
-      toast.error('Lỗi khi cập nhật đơn hàng');
+      toast.error('Failed to update order');
       console.error(error);
     } finally {
       setLoading(false);
@@ -109,7 +109,7 @@ const OrderManagement = ({ url }) => {
 
   const handleCancelConfirm = async () => {
     if (!cancelReason.trim()) {
-      toast.error('Vui lòng nhập lý do hủy đơn');
+      toast.error('Please enter cancellation reason');
       return;
     }
 
@@ -123,17 +123,17 @@ const OrderManagement = ({ url }) => {
       });
 
       if (response.data.success) {
-        toast.success('Đơn hàng đã được hủy');
+        toast.success('Order cancelled successfully');
         fetchOrders();
         setShowCancelModal(false);
         setCancelReason('');
         setSelectedOrder(null);
         stopNotificationSound();
       } else {
-        toast.error(response.data.message || 'Lỗi khi hủy đơn');
+        toast.error(response.data.message || 'Failed to cancel order');
       }
     } catch (error) {
-      toast.error('Lỗi khi hủy đơn hàng');
+      toast.error('Failed to cancel order');
       console.error(error);
     } finally {
       setLoading(false);
@@ -168,10 +168,7 @@ const OrderManagement = ({ url }) => {
 
   // Format currency
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(amount);
+    return `$${amount.toFixed(2)}`;
   };
 
   // Format time
@@ -211,12 +208,12 @@ const OrderManagement = ({ url }) => {
 
         {order.address?.note && (
           <div className="order-note">
-            📝 Ghi chú: {order.address.note}
+            📝 Note: {order.address.note}
           </div>
         )}
 
         <div className="order-total">
-          Tổng: {formatCurrency(order.amount)}
+          Total: {formatCurrency(order.amount)}
         </div>
 
         <div className="order-actions">
@@ -227,14 +224,14 @@ const OrderManagement = ({ url }) => {
                 onClick={() => handleConfirmOrder(order._id)}
                 disabled={loading}
               >
-                ✓ Xác nhận đơn hàng
+                ✓ Confirm Order
               </button>
               <button
                 className="btn-action btn-cancel"
                 onClick={() => handleCancelClick(order)}
                 disabled={loading}
               >
-                ✕ Hủy đơn
+                ✕ Cancel
               </button>
             </>
           )}
@@ -246,14 +243,14 @@ const OrderManagement = ({ url }) => {
                 onClick={() => handleReadyOrder(order._id)}
                 disabled={loading}
               >
-                🚚 Sẵn sàng giao hàng
+                🚚 Ready for Delivery
               </button>
               <button
                 className="btn-action btn-cancel"
                 onClick={() => handleCancelClick(order)}
                 disabled={loading}
               >
-                ✕ Hủy đơn
+                ✕ Cancel
               </button>
             </>
           )}
@@ -279,7 +276,7 @@ const OrderManagement = ({ url }) => {
           ) : (
             <div className="empty-state">
               <div className="empty-state-icon">📭</div>
-              <div className="empty-state-text">Không có đơn hàng</div>
+              <div className="empty-state-text">No orders</div>
             </div>
           )}
         </div>
@@ -294,46 +291,46 @@ const OrderManagement = ({ url }) => {
         <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBStcuOfunl0SD0Cp4/G3YhoEOZHY8s18KQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=" type="audio/wav" />
       </audio>
 
-      <h1>🍽️ Quản lý Đơn hàng</h1>
+      <h1>🍽️ Order Management</h1>
 
       {/* Stats bar */}
       <div className="stats-bar">
         <div className="stat-card">
-          <div className="stat-label">Đơn chờ xác nhận</div>
+          <div className="stat-label">Pending Orders</div>
           <div className="stat-value" style={{ color: '#dc2626' }}>{stats.pending}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Đang chuẩn bị</div>
+          <div className="stat-label">Preparing</div>
           <div className="stat-value" style={{ color: '#ea580c' }}>{stats.preparing}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Hoàn thành</div>
+          <div className="stat-label">Completed</div>
           <div className="stat-value" style={{ color: '#16a34a' }}>{stats.completed}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Tổng đơn</div>
+          <div className="stat-label">Total Orders</div>
           <div className="stat-value">{stats.total}</div>
         </div>
       </div>
 
       {/* Kanban board */}
       <div className="kanban-board">
-        {renderColumn('🔔 Đơn mới', 'Pending', 'pending')}
-        {renderColumn('👨‍🍳 Đang chuẩn bị', 'Preparing', 'preparing')}
-        {renderColumn('🚚 Đang giao', 'Delivering', 'delivering')}
-        {renderColumn('✅ Hoàn thành', 'Completed', 'completed')}
-        {renderColumn('❌ Đã hủy', 'Cancelled', 'cancelled')}
+        {renderColumn('🔔 New Orders', 'Pending', 'pending')}
+        {renderColumn('👨‍🍳 Preparing', 'Preparing', 'preparing')}
+        {renderColumn('🚚 Delivering', 'Delivering', 'delivering')}
+        {renderColumn('✅ Completed', 'Completed', 'completed')}
+        {renderColumn('❌ Cancelled', 'Cancelled', 'cancelled')}
       </div>
 
       {/* Cancel modal */}
       {showCancelModal && (
         <div className="modal-overlay" onClick={() => setShowCancelModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3 className="modal-title">Hủy đơn hàng</h3>
+            <h3 className="modal-title">Cancel Order</h3>
             <textarea
               className="modal-input"
               rows="4"
-              placeholder="Nhập lý do hủy đơn..."
+              placeholder="Enter cancellation reason..."
               value={cancelReason}
               onChange={(e) => setCancelReason(e.target.value)}
             />
@@ -345,14 +342,14 @@ const OrderManagement = ({ url }) => {
                   setCancelReason('');
                 }}
               >
-                Đóng
+                Close
               </button>
               <button
                 className="btn-modal btn-modal-confirm"
                 onClick={handleCancelConfirm}
                 disabled={loading}
               >
-                Xác nhận hủy
+                Confirm Cancel
               </button>
             </div>
           </div>

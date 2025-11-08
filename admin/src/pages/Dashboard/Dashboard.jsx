@@ -111,10 +111,7 @@ const Dashboard = ({ url }) => {
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(amount);
+    return `$${amount.toFixed(2)}`;
   };
 
   const formatDate = (dateString) => {
@@ -143,7 +140,7 @@ const Dashboard = ({ url }) => {
     return (
       <div className="dashboard-loading">
         <div className="spinner"></div>
-        <p>Đang tải dữ liệu...</p>
+        <p>Loading data...</p>
       </div>
     );
   }
@@ -151,9 +148,9 @@ const Dashboard = ({ url }) => {
   return (
     <div className="dashboard">
       <div className="dashboard-header">
-        <h1>📊 Dashboard Tổng quan</h1>
+        <h1>📊 Dashboard Overview</h1>
         <button className="refresh-btn" onClick={fetchDashboardData}>
-          🔄 Làm mới
+          🔄 Refresh
         </button>
       </div>
 
@@ -162,58 +159,58 @@ const Dashboard = ({ url }) => {
         <div className="stat-card revenue">
           <div className="stat-icon">💰</div>
           <div className="stat-content">
-            <p className="stat-label">Tổng doanh thu</p>
+            <p className="stat-label">Total Revenue</p>
             <h2 className="stat-value">{formatCurrency(stats.totalRevenue)}</h2>
-            <p className="stat-sub">Từ {stats.completedOrders} đơn hoàn thành</p>
+            <p className="stat-sub">From {stats.completedOrders} completed orders</p>
           </div>
         </div>
 
         <div className="stat-card orders">
           <div className="stat-icon">📦</div>
           <div className="stat-content">
-            <p className="stat-label">Tổng đơn hàng</p>
+            <p className="stat-label">Total Orders</p>
             <h2 className="stat-value">{stats.totalOrders}</h2>
-            <p className="stat-sub">{stats.pendingOrders} đơn đang xử lý</p>
+            <p className="stat-sub">{stats.pendingOrders} orders processing</p>
           </div>
         </div>
 
         <div className="stat-card foods">
           <div className="stat-icon">🍔</div>
           <div className="stat-content">
-            <p className="stat-label">Tổng món ăn</p>
+            <p className="stat-label">Total Food Items</p>
             <h2 className="stat-value">{stats.totalFoods}</h2>
-            <p className="stat-sub">Trong menu</p>
+            <p className="stat-sub">In menu</p>
           </div>
         </div>
 
         <div className="stat-card users">
           <div className="stat-icon">👥</div>
           <div className="stat-content">
-            <p className="stat-label">Tổng khách hàng</p>
+            <p className="stat-label">Total Customers</p>
             <h2 className="stat-value">{stats.totalUsers}</h2>
-            <p className="stat-sub">Người dùng đã đăng ký</p>
+            <p className="stat-sub">Registered users</p>
           </div>
         </div>
       </div>
 
       {/* Today Stats */}
       <div className="today-stats">
-        <h2>📅 Thống kê hôm nay</h2>
+        <h2>📅 Today's Statistics</h2>
         <div className="today-grid">
           <div className="today-card">
-            <span className="today-label">Doanh thu</span>
+            <span className="today-label">Revenue</span>
             <span className="today-value">{formatCurrency(stats.todayRevenue)}</span>
           </div>
           <div className="today-card">
-            <span className="today-label">Đơn hàng</span>
+            <span className="today-label">Orders</span>
             <span className="today-value">{stats.todayOrders}</span>
           </div>
           <div className="today-card">
-            <span className="today-label">Đơn chờ xử lý</span>
+            <span className="today-label">Pending Orders</span>
             <span className="today-value pending">{stats.pendingOrders}</span>
           </div>
           <div className="today-card">
-            <span className="today-label">Đơn hoàn thành</span>
+            <span className="today-label">Completed Orders</span>
             <span className="today-value success">{stats.completedOrders}</span>
           </div>
         </div>
@@ -223,10 +220,10 @@ const Dashboard = ({ url }) => {
       <div className="dashboard-grid">
         {/* Recent Orders */}
         <div className="dashboard-section">
-          <h2>🕐 Đơn hàng gần đây</h2>
+          <h2>🕐 Recent Orders</h2>
           <div className="orders-list">
             {recentOrders.length === 0 ? (
-              <p className="empty-message">Chưa có đơn hàng nào</p>
+              <p className="empty-message">No orders yet</p>
             ) : (
               recentOrders.map((order) => (
                 <div key={order._id} className="order-item">
@@ -254,17 +251,17 @@ const Dashboard = ({ url }) => {
 
         {/* Top Foods */}
         <div className="dashboard-section">
-          <h2>🏆 Top món ăn bán chạy</h2>
+          <h2>🏆 Top Selling Items</h2>
           <div className="top-foods-list">
             {topFoods.length === 0 ? (
-              <p className="empty-message">Chưa có dữ liệu</p>
+              <p className="empty-message">No data available</p>
             ) : (
               topFoods.map((food, index) => (
                 <div key={food.name} className="top-food-item">
                   <div className="rank">{index + 1}</div>
                   <div className="food-info">
                     <span className="food-name">{food.name}</span>
-                    <span className="food-count">{food.count} đã bán</span>
+                    <span className="food-count">{food.count} sold</span>
                   </div>
                   <span className="food-revenue">{formatCurrency(food.revenue)}</span>
                 </div>
