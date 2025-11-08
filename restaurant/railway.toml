@@ -1,0 +1,7 @@
+# Railway.toml - Restaurant Service Configuration
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "nginx -g 'daemon off;'"
