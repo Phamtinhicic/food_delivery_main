@@ -1,7 +1,0 @@
-# Railway.toml - Admin Service Configuration
-[build]
-builder = "DOCKERFILE"
-dockerfilePath = "Dockerfile"
-
-[deploy]
-startCommand = "nginx -g 'daemon off;'"
