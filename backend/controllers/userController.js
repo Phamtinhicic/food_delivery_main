@@ -3,6 +3,30 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import validator from "validator";
 
+// Make user admin (TEMPORARY ENDPOINT - remove after use)
+const makeAdmin = async (req, res) => {
+  const { email, secret } = req.body;
+  
+  // Simple security: require a secret key
+  if (secret !== process.env.ADMIN_SETUP_SECRET) {
+    return res.json({ success: false, message: "Unauthorized" });
+  }
+  
+  try {
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return res.json({ success: false, message: "User not found" });
+    }
+    
+    user.role = "admin";
+    await user.save();
+    res.json({ success: true, message: `${email} is now admin` });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: "Error" });
+  }
+};
+
 // login user
 
 const loginUser = async (req, res) => {
@@ -145,4 +169,4 @@ const deleteUserByAdmin = async (req, res) => {
   }
 };
 
-export { loginUser, registerUser, createUserByAdmin, listAllUsers, deleteUserByAdmin };
+export { loginUser, registerUser, createUserByAdmin, listAllUsers, deleteUserByAdmin, makeAdmin };

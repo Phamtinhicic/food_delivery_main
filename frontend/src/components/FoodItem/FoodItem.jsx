@@ -6,10 +6,13 @@ import { StoreContext } from "../../context/StoreContext";
 const FoodItem = ({ id, name, price, description, image }) => {
   const {cartItems,addToCart,removeFromCart,url}=useContext(StoreContext); 
 
+  // Support both Cloudinary URLs and legacy local paths
+  const imageUrl = image?.startsWith('http') ? image : `${url}/images/${image}`;
+
   return (
     <div className="food-item">
       <div className="food-item-img-container">
-        <img src={url+"/images/"+image} alt="" className="food-item-image" />
+        <img src={imageUrl} alt="" className="food-item-image" />
         {!cartItems[id] ? (
           <img
             className="add"

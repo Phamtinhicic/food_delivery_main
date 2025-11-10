@@ -113,7 +113,7 @@ const Add = ({url}) => {
                 image 
                   ? URL.createObjectURL(image) 
                   : existingImage 
-                    ? `${url}/images/${existingImage}` 
+                    ? (existingImage.startsWith('http') ? existingImage : `${url}/images/${existingImage}`)
                     : assets.upload_area
               }
               alt=""
