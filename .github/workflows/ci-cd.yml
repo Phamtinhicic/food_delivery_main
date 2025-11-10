@@ -53,14 +53,30 @@ jobs:
           PORT: 4000
           DEV_PAYMENT: true
         run: |
-          node server.js &
+          echo "Starting backend server..."
+          node server.js > server.log 2>&1 &
           echo $! > server.pid
-          sleep 5
+          echo "Server PID: $(cat server.pid)"
+          sleep 10
+          echo "Server logs:"
+          cat server.log || true
           
       - name: Wait for server to be ready
         run: |
-          timeout 30 bash -c 'until curl -f http://localhost:4000/; do sleep 1; done'
-          echo "Server is ready!"
+          echo "Checking if server is responding..."
+          for i in {1..30}; do
+            if curl -f http://localhost:4000/ 2>/dev/null; then
+              echo "Server is ready!"
+              exit 0
+            fi
+            echo "Attempt $i/30: Server not ready yet, waiting..."
+            sleep 2
+          done
+          echo "Server failed to start. Checking logs:"
+          cat backend/server.log || true
+          echo "Checking if process is running:"
+          ps aux | grep node || true
+          exit 1
 
       - name: Run backend tests
         working-directory: backend
