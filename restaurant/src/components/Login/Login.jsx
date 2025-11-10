@@ -29,7 +29,7 @@ const Login = ({ url }) => {
         setRestaurant(true);
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("restaurant", true);
-        toast.success("Đăng nhập thành công!");
+        toast.success("^.^ Đăng nhập thành công!");
         navigate("/dashboard");
       } else {
         toast.error("Bạn không có quyền truy cập giao diện nhà hàng");
