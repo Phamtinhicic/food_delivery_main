@@ -15,7 +15,25 @@ const port = process.env.PORT || 4000;
 // We still use express.json for most routes, but Stripe requires the raw body for webhook signature verification.
 // The webhook route below will use bodyParser.raw({type: 'application/json'})
 app.use(express.json());
-app.use(cors());
+
+// CORS configuration - allow frontend domains
+const corsOptions = {
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://localhost:5175',
+    'https://frontend-production-0b96.up.railway.app',
+    'https://admin-production-642b.up.railway.app',
+    'https://restaurant-production-7d80.up.railway.app',
+    process.env.FRONTEND_URL,
+    process.env.ADMIN_URL,
+    process.env.RESTAURANT_URL
+  ].filter(Boolean), // Remove undefined values
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
 
 // DB connection
 connectDB();
