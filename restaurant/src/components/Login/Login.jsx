@@ -49,8 +49,8 @@ const Login = ({ url }) => {
     <div className="login-popup">
       <form onSubmit={onLogin} className="login-popup-container">
         <div className="login-popup-title">
-          <h2>Đăng nhập Nhà hàng</h2>
-          <p>Đăng nhập để quản lý nhà hàng của bạn</p>
+          <h2>Restaurant Login</h2>
+          <p>Login to manage your restaurant</p>
         </div>
         <div className="login-popup-inputs">
           <input
@@ -70,7 +70,7 @@ const Login = ({ url }) => {
             required
           />
         </div>
-        <button type="submit">Đăng nhập</button>
+        <button type="submit">Login</button>
       </form>
     </div>
   );
