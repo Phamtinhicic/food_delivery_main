@@ -1,88 +1,175 @@
-import { describe, test, expect } from '@jest/globals';
+import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
+import request from 'supertest';
+import mongoose from 'mongoose';
+
+// Test server URL - will use environment variable or local
+const TEST_URL = process.env.TEST_API_URL || 'http://localhost:4000';
+
+// Store test data
+let testUserToken = '';
+let testUserId = '';
+const testUserEmail = `test${Date.now()}@example.com`;
 
 describe('User API Tests', () => {
-  describe('Basic validation tests', () => {
-    test('should validate email format', () => {
-      const validEmail = 'test@example.com';
-      const invalidEmail = 'invalid-email';
-      
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      
-      expect(emailRegex.test(validEmail)).toBe(true);
-      expect(emailRegex.test(invalidEmail)).toBe(false);
-    });
-
-    test('should validate password length', () => {
-      const validPassword = 'Test123456';
-      const shortPassword = '123';
-      
-      expect(validPassword.length >= 8).toBe(true);
-      expect(shortPassword.length >= 8).toBe(false);
-    });
-
-    test('should validate required fields', () => {
-      const completeUser = {
-        name: 'Test User',
-        email: 'test@example.com',
-        password: 'Test123456'
-      };
-      
-      const incompleteUser = {
-        name: 'Test User',
-        email: 'test@example.com'
-      };
-      
-      expect(completeUser).toHaveProperty('name');
-      expect(completeUser).toHaveProperty('email');
-      expect(completeUser).toHaveProperty('password');
-      
-      expect(incompleteUser).not.toHaveProperty('password');
-    });
-
-    test('should create user object structure', () => {
-      const user = {
-        name: 'Test User',
-        email: 'test@example.com',
-        password: 'hashedpassword',
-        cartData: {}
-      };
-      
-      expect(user).toHaveProperty('name');
-      expect(user).toHaveProperty('email');
-      expect(user).toHaveProperty('password');
-      expect(user).toHaveProperty('cartData');
-      expect(typeof user.cartData).toBe('object');
-    });
+  
+  // Connect to test database before all tests
+  beforeAll(async () => {
+    // Wait a bit for server to be ready
+    await new Promise(resolve => setTimeout(resolve, 2000));
   });
 
-  describe('JWT Token structure tests', () => {
-    test('should have correct token structure', () => {
-      const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEyMyJ9.abc';
-      const parts = mockToken.split('.');
-      
-      expect(parts).toHaveLength(3);
-      expect(parts[0]).toBeTruthy(); // header
-      expect(parts[1]).toBeTruthy(); // payload
-      expect(parts[2]).toBeTruthy(); // signature
-    });
+  // Clean up after all tests
+  afterAll(async () => {
+    // Close mongoose connection if any
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.connection.close();
+    }
   });
 
-  describe('Cart data tests', () => {
-    test('should initialize empty cart', () => {
-      const cartData = {};
-      
-      expect(Object.keys(cartData).length).toBe(0);
-    });
+  describe('POST /api/user/register', () => {
+    test('should register a new user successfully', async () => {
+      const response = await request(TEST_URL)
+        .post('/api/user/register')
+        .send({
+          name: 'Test User',
+          email: testUserEmail,
+          password: 'Test123456'
+        });
 
-    test('should add item to cart', () => {
-      const cartData = {};
-      const itemId = 'food123';
-      const quantity = 2;
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('success', true);
+      expect(response.body).toHaveProperty('token');
       
-      cartData[itemId] = quantity;
-      
-      expect(cartData).toHaveProperty(itemId);
-      expect(cartData[itemId]).toBe(quantity);
-    });
+      // Store token for later tests
+      testUserToken = response.body.token;
+    }, 10000);
+
+    test('should fail to register with existing email', async () => {
+      const response = await request(TEST_URL)
+        .post('/api/user/register')
+        .send({
+          name: 'Test User 2',
+          email: testUserEmail, // Same email as above
+          password: 'Test123456'
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('success', false);
+      expect(response.body.message).toContain('already exists');
+    }, 10000);
+
+    test('should fail to register with invalid email', async () => {
+      const response = await request(TEST_URL)
+        .post('/api/user/register')
+        .send({
+          name: 'Test User',
+          email: 'invalid-email',
+          password: 'Test123456'
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('success', false);
+    }, 10000);
+
+    test('should fail to register with missing fields', async () => {
+      const response = await request(TEST_URL)
+        .post('/api/user/register')
+        .send({
+          name: 'Test User',
+          // Missing email and password
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('success', false);
+    }, 10000);
+  });
+
+  describe('POST /api/user/login', () => {
+    test('should login successfully with correct credentials', async () => {
+      const response = await request(TEST_URL)
+        .post('/api/user/login')
+        .send({
+          email: testUserEmail,
+          password: 'Test123456'
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('success', true);
+      expect(response.body).toHaveProperty('token');
+    }, 10000);
+
+    test('should fail to login with wrong password', async () => {
+      const response = await request(TEST_URL)
+        .post('/api/user/login')
+        .send({
+          email: testUserEmail,
+          password: 'WrongPassword123'
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('success', false);
+      expect(response.body.message).toContain('Invalid credentials');
+    }, 10000);
+
+    test('should fail to login with non-existent email', async () => {
+      const response = await request(TEST_URL)
+        .post('/api/user/login')
+        .send({
+          email: 'nonexistent@example.com',
+          password: 'Test123456'
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('success', false);
+    }, 10000);
+
+    test('should fail to login without email', async () => {
+      const response = await request(TEST_URL)
+        .post('/api/user/login')
+        .send({
+          password: 'Test123456'
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('success', false);
+    }, 10000);
+  });
+
+  describe('Cart API', () => {
+    test('POST /api/cart/add - should require authentication', async () => {
+      const response = await request(TEST_URL)
+        .post('/api/cart/add')
+        .send({
+          itemId: 'test-food-id'
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('success', false);
+      expect(response.body.message).toContain('Login Again');
+    }, 10000);
+
+    test('POST /api/cart/add - should add item to cart with valid token', async () => {
+      const response = await request(TEST_URL)
+        .post('/api/cart/add')
+        .set('token', testUserToken)
+        .send({
+          itemId: 'test-food-id'
+        });
+
+      // Will fail if no food exists, but should authenticate properly
+      expect(response.status).toBe(200);
+      // Either success or failure message, but not auth error
+      expect(response.body.message).not.toContain('Login Again');
+    }, 10000);
+
+    test('GET /api/cart/get - should get cart data with valid token', async () => {
+      const response = await request(TEST_URL)
+        .post('/api/cart/get')
+        .set('token', testUserToken);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('success', true);
+      expect(response.body).toHaveProperty('cartData');
+    }, 10000);
   });
 });
