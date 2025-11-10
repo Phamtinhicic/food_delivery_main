@@ -2,9 +2,12 @@
 
 [![MERN Stack](https://img.shields.io/badge/MERN-Stack-green)](https://www.mongodb.com/mern-stack)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue)](https://www.docker.com/)
+[![Railway](https://img.shields.io/badge/Railway-Deployed-purple)](https://railway.app/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Hệ thống giao đồ ăn hoàn chỉnh với **3 giao diện riêng biệt**: Frontend (Khách hàng), Admin Panel và Restaurant Panel.
+
+🚀 **Deployed on Railway** | ☁️ **Cloudinary Storage** | 💳 **Stripe Payment**
 
 ---
 
