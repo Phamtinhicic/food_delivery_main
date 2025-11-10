@@ -5,78 +5,54 @@ import Stripe from "stripe";
 const stripeSecret = process.env.STRIPE_SECRET_KEY || "";
 const stripe = stripeSecret ? new Stripe(stripeSecret) : null;
 
-// placing user order for frontend (supports COD and Stripe)
+// placing user order for frontend (STRIPE ONLY - order created after payment)
 const placeOrder = async (req, res) => {
   const frontend_url = process.env.FRONTEND_URL || "http://localhost:5173";
   try {
-    const { paymentMethod } = req.body; // 'cod' or 'stripe'
-    const newOrder = new orderModel({
-      userId: req.body.userId,
-      items: req.body.items,
-      amount: req.body.amount,
-      address: req.body.address,
-      payment: false,
-      paymentMethod: paymentMethod || "cod",
+    // Only Stripe payment allowed
+    if (!stripe) {
+      console.error("Stripe not configured (STRIPE_SECRET_KEY missing)");
+      return res.status(500).json({ success: false, message: "Payment provider not configured" });
+    }
+
+    const line_items = (req.body.items || []).map((item) => ({
+      price_data: {
+        currency: "usd",
+        product_data: { name: item.name },
+        unit_amount: Math.round(Number(item.price) * 100),
+      },
+      quantity: Number(item.quantity) || 1,
+    }));
+
+    // add delivery fee as separate line item
+    line_items.push({
+      price_data: {
+        currency: "usd",
+        product_data: { name: "Delivery Charges" },
+        unit_amount: 2 * 100,
+      },
+      quantity: 1,
     });
-    await newOrder.save();
+
+    // Create Stripe session with order data in metadata (don't create order yet)
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items,
+      mode: "payment",
+      success_url: `${frontend_url}/verify?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${frontend_url}/verify?success=false`,
+      metadata: {
+        userId: req.body.userId,
+        items: JSON.stringify(req.body.items),
+        amount: req.body.amount.toString(),
+        address: JSON.stringify(req.body.address),
+      },
+    });
+
+    // Clear cart immediately (user committed to purchase)
     await userModel.findByIdAndUpdate(req.body.userId, { cartData: {} });
 
-    // Dev mode: simulate successful online payment without external provider
-    if (process.env.DEV_PAYMENT === "true" && paymentMethod === "stripe") {
-      await orderModel.findByIdAndUpdate(newOrder._id, { payment: true });
-      const successUrl = `${frontend_url}/verify?success=true&orderId=${newOrder._id}`;
-      return res.json({ success: true, session_url: successUrl });
-    }
-
-    if (!paymentMethod || paymentMethod === "cod") {
-      // Cash on Delivery: mark payment=false, return success
-      return res.json({ success: true, message: "Order placed with Cash on Delivery", orderId: newOrder._id });
-    }
-
-    // Stripe flow
-    if (paymentMethod === "stripe") {
-      if (!stripe) {
-        console.error("Stripe not configured (STRIPE_SECRET_KEY missing)");
-        return res.status(500).json({ success: false, message: "Payment provider not configured" });
-      }
-
-      const line_items = (req.body.items || []).map((item) => ({
-        price_data: {
-          currency: "usd",
-          product_data: { name: item.name },
-          unit_amount: Math.round(Number(item.price) * 100),
-        },
-        quantity: Number(item.quantity) || 1,
-      }));
-
-      // add delivery fee as separate line item
-      line_items.push({
-        price_data: {
-          currency: "usd",
-          product_data: { name: "Delivery Charges" },
-          unit_amount: 2 * 100,
-        },
-        quantity: 1,
-      });
-
-      const session = await stripe.checkout.sessions.create({
-        payment_method_types: ["card"],
-        line_items,
-        mode: "payment",
-        // include session_id placeholder so Stripe will replace it with the real id on redirect
-        success_url: `${frontend_url}/verify?orderId=${newOrder._id}&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${frontend_url}/verify?success=false&orderId=${newOrder._id}`,
-        metadata: { orderId: newOrder._id.toString() },
-      });
-
-      // save stripe session id to order for later verification
-      newOrder.stripeSessionId = session.id;
-      await newOrder.save();
-
     return res.json({ success: true, session_url: session.url });
-    }
-
-    return res.status(400).json({ success: false, message: "Invalid payment method" });
   } catch (error) {
     console.error("placeOrder error:", error);
     res.status(500).json({ success: false, message: "Payment Error", details: error.message });
@@ -84,18 +60,36 @@ const placeOrder = async (req, res) => {
 };
 
 const verifyOrder = async (req, res) => {
-  const { orderId, success } = req.body;
+  const { session_id, success } = req.body;
   try {
-    if (success == "true") {
-      await orderModel.findByIdAndUpdate(orderId, { payment: true });
-      res.json({ success: true, message: "Paid" });
-    } else {
-      await orderModel.findByIdAndDelete(orderId);
-      res.json({ success: false, message: "Not Paid" });
+    if (success === "true" && session_id) {
+      // Retrieve Stripe session to get metadata
+      const session = await stripe.checkout.sessions.retrieve(session_id);
+      
+      if (session.payment_status === "paid") {
+        // Create order ONLY after payment confirmed
+        const orderData = {
+          userId: session.metadata.userId,
+          items: JSON.parse(session.metadata.items),
+          amount: parseFloat(session.metadata.amount),
+          address: JSON.parse(session.metadata.address),
+          payment: true,
+          paymentMethod: "stripe",
+          stripeSessionId: session_id,
+        };
+        
+        const newOrder = new orderModel(orderData);
+        await newOrder.save();
+        
+        return res.json({ success: true, message: "Payment verified, order created", orderId: newOrder._id });
+      }
     }
+    
+    // Payment failed or cancelled
+    return res.json({ success: false, message: "Payment not completed" });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: "Error" });
+    console.error("verifyOrder error:", error);
+    res.json({ success: false, message: "Error verifying payment" });
   }
 };
 

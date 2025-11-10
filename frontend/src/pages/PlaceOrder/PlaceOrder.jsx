@@ -28,8 +28,6 @@ const PlaceOrder = () => {
     setData((data) => ({ ...data, [name]: value }));
   };
 
-  const [paymentMethod, setPaymentMethod] = useState("cod");
-
   const placeOrder = async (event) => {
     event.preventDefault();
     let orderItems = [];
@@ -44,21 +42,15 @@ const PlaceOrder = () => {
       address: data,
       items: orderItems,
       amount: getTotalCartAmount() + 2,
-      paymentMethod,
     };
     
     try{
       let response= await axios.post(url+"/api/order/place",orderData,{headers:{token}});
-      if(response.data.success){
-        if(paymentMethod === "stripe" && response.data.session_url){
-          window.location.replace(response.data.session_url);
-        } else {
-          // COD or no session_url
-          toast.success(response.data.message || "Order placed");
-          navigate('/myorders');
-        }
+      if(response.data.success && response.data.session_url){
+        // Redirect to Stripe checkout (COD removed)
+        window.location.replace(response.data.session_url);
       } else {
-        toast.error(response.data.message || "Errors!")
+        toast.error(response.data.message || "Payment setup failed")
       }
     }catch(err){
       console.error("placeOrder err", err);
@@ -180,16 +172,10 @@ const PlaceOrder = () => {
               </b>
             </div>
           </div>
-          <button type="submit">PROCEED TO PAYMENT</button>
-          <div style={{marginTop:10}}>
-            <p style={{marginBottom:6}}>Payment Method</p>
-            <label style={{marginRight:10}}>
-              <input type="radio" checked={paymentMethod==="cod"} onChange={()=>setPaymentMethod("cod")} /> Cash on Delivery
-            </label>
-            <label>
-              <input type="radio" checked={paymentMethod==="stripe"} onChange={()=>setPaymentMethod("stripe")} /> Pay with Card (Stripe)
-            </label>
-          </div>
+          <button type="submit">PROCEED TO CHECKOUT</button>
+          <p style={{marginTop:10, fontSize:"14px", color:"#888"}}>
+            Payment via Stripe (Secure Card Payment)
+          </p>
         </div>
       </div>
     </form>

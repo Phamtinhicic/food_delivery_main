@@ -15,9 +15,19 @@ const Verify = () => {
     const navigate= useNavigate();
 
     const verifyPayment=async()=>{
-            if (sessionId) {
-                // capture Stripe session server-side
-                const response = await axios.post(url + "/api/order/capture", { orderId, sessionId });
+            try {
+                // Always use session_id from Stripe (COD removed)
+                if (!sessionId || !success) {
+                    toast.error("Invalid payment session");
+                    navigate("/");
+                    return;
+                }
+
+                const response = await axios.post(url + "/api/order/verify", { 
+                    session_id: sessionId, 
+                    success 
+                });
+                
                 if (response.data.success) {
                     navigate("/myorders");
                     toast.success("Order Placed Successfully");
@@ -25,16 +35,10 @@ const Verify = () => {
                     toast.error("Payment verification failed");
                     navigate("/");
                 }
-            } else {
-                // fallback to previous verify flow
-                const response = await axios.post(url+"/api/order/verify",{success,orderId});
-                if(response.data.success){
-                    navigate("/myorders");
-                    toast.success("Order Placed Successfully");
-                }else{
-                    toast.error("Something went wrong");
-                    navigate("/");
-                }
+            } catch (error) {
+                console.error("Verify error:", error);
+                toast.error("Error verifying payment");
+                navigate("/");
             }
     }
     useEffect(()=>{
