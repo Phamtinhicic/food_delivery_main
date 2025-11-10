@@ -22,17 +22,14 @@ RUN npm run build
 # Production stage
 FROM nginx:stable-alpine
 
-# Install envsubst for environment variable substitution
-RUN apk add --no-cache gettext
-
 # Copy built files
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy nginx config template
-COPY nginx.conf /etc/nginx/templates/default.conf.template
+# Copy nginx config
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose port (Railway will set $PORT)
-EXPOSE $PORT
+# Expose port 80 (Railway will map to $PORT)
+EXPOSE 80
 
-# Nginx will automatically use PORT from environment
-CMD ["sh", "-c", "envsubst '$$PORT' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]
