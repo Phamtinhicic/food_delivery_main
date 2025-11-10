@@ -39,7 +39,7 @@ const placeOrder = async (req, res) => {
       payment_method_types: ["card"],
       line_items,
       mode: "payment",
-      success_url: `${frontend_url}/verify?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${frontend_url}/verify?success=true&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${frontend_url}/verify?success=false`,
       metadata: {
         userId: req.body.userId,
