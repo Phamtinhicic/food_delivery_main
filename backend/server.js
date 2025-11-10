@@ -34,12 +34,10 @@ app.get("/", (req, res) => {
   res.send("API Working");
 });
 
-// Only start server if not in test mode
-if (process.env.NODE_ENV !== 'test') {
-  app.listen(port, () => {
-    console.log(`Server Started on port: ${port}`);
-  });
-}
+// Start server (will be started in all environments including test for integration tests)
+app.listen(port, "0.0.0.0", () => {
+  console.log(`Server Started on port: ${port}`);
+});
 
 // Export app for testing
 export default app;
