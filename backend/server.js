@@ -30,8 +30,17 @@ app.use("/api/order", orderRouter);
 // webhook endpoint removed (previously used for Stripe). If you add webhooks in future,
 // mount the raw body parser and handler here.
 
+// Health check endpoints for Railway and monitoring
 app.get("/", (req, res) => {
   res.send("API Working");
+});
+
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok", message: "Server is healthy" });
+});
+
+app.get("/healthz", (req, res) => {
+  res.status(200).json({ status: "ok", message: "Server is healthy" });
 });
 
 // Only start server if not in test environment  
