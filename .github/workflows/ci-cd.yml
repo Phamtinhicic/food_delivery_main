@@ -43,41 +43,6 @@ jobs:
         working-directory: backend
         run: npm ci --prefer-offline --no-audit
 
-      - name: Start backend server
-        working-directory: backend
-        env:
-          NODE_ENV: test
-          MONGO_URI: mongodb://localhost:27017/FoodDeliveryTest
-          JWT_SECRET: test_secret_key_for_ci
-          SALT: 10
-          PORT: 4000
-          DEV_PAYMENT: true
-        run: |
-          echo "Starting backend server..."
-          nohup node server.js > server.log 2>&1 &
-          SERVER_PID=$!
-          echo $SERVER_PID > server.pid
-          echo "Server PID: $SERVER_PID"
-          
-          # Wait for server to start
-          echo "Waiting for server to start..."
-          for i in {1..30}; do
-            if curl -f http://localhost:4000/ 2>/dev/null; then
-              echo "✓ Server is ready!"
-              cat server.log
-              exit 0
-            fi
-            echo "Attempt $i/30: Waiting for server..."
-            sleep 2
-          done
-          
-          echo "❌ Server failed to start within 60 seconds"
-          echo "Server logs:"
-          cat server.log || echo "No logs found"
-          echo "Checking process:"
-          ps aux | grep node || echo "No node process found"
-          exit 1
-
       - name: Run backend tests
         working-directory: backend
         env:
@@ -85,19 +50,8 @@ jobs:
           MONGO_URI: mongodb://localhost:27017/FoodDeliveryTest
           JWT_SECRET: test_secret_key_for_ci
           SALT: 10
-          TEST_API_URL: http://localhost:4000
-        run: |
-          echo "Running tests against http://localhost:4000"
-          echo "Server PID: $(cat server.pid)"
-          ps aux | grep $(cat server.pid) || echo "Warning: Server process not found!"
-          npm test
-        
-      - name: Stop backend server
-        if: always()
-        run: |
-          if [ -f backend/server.pid ]; then
-            kill $(cat backend/server.pid) || true
-          fi
+          DEV_PAYMENT: true
+        run: npm test
 
   # Build Frontend Services
   build:

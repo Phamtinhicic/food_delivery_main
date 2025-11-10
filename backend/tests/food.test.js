@@ -3,7 +3,7 @@ import request from 'supertest';
 import mongoose from 'mongoose';
 
 // Test server URL
-const TEST_URL = process.env.TEST_API_URL || 'http://localhost:4000';
+import app from '../server.js';
 
 // Store admin token and test food ID
 let adminToken = '';
@@ -27,7 +27,7 @@ describe('Food API Tests', () => {
 
   describe('GET /api/food/list', () => {
     test('should get list of all foods', async () => {
-      const response = await request(TEST_URL)
+      const response = await request(app)
         .get('/api/food/list');
 
       expect(response.status).toBe(200);
@@ -37,7 +37,7 @@ describe('Food API Tests', () => {
     }, 10000);
 
     test('should return foods with correct structure', async () => {
-      const response = await request(TEST_URL)
+      const response = await request(app)
         .get('/api/food/list');
 
       expect(response.status).toBe(200);
@@ -54,7 +54,7 @@ describe('Food API Tests', () => {
 
   describe('POST /api/food/add', () => {
     test('should require authentication', async () => {
-      const response = await request(TEST_URL)
+      const response = await request(app)
         .post('/api/food/add')
         .field('name', 'Test Food')
         .field('description', 'Test Description')
@@ -67,7 +67,7 @@ describe('Food API Tests', () => {
     }, 10000);
 
     test('should validate required fields', async () => {
-      const response = await request(TEST_URL)
+      const response = await request(app)
         .post('/api/food/add')
         .field('description', 'Test Description')
         .field('price', '15.99');
@@ -80,7 +80,7 @@ describe('Food API Tests', () => {
 
   describe('POST /api/food/remove', () => {
     test('should require authentication', async () => {
-      const response = await request(TEST_URL)
+      const response = await request(app)
         .post('/api/food/remove')
         .send({
           id: 'nonexistent-id'

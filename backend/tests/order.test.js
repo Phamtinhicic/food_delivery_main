@@ -1,8 +1,8 @@
-﻿import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
+import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
 import request from 'supertest';
 import mongoose from 'mongoose';
 
-const TEST_URL = process.env.TEST_API_URL || 'http://localhost:4000';
+import app from '../server.js';
 
 let userToken = '';
 const testUserEmail = `ordertest${Date.now()}@example.com`;
@@ -12,7 +12,7 @@ describe('Order API Tests', () => {
   beforeAll(async () => {
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    const registerResponse = await request(TEST_URL)
+    const registerResponse = await request(app)
       .post('/api/user/register')
       .send({
         name: 'Order Test User',
@@ -33,7 +33,7 @@ describe('Order API Tests', () => {
 
   describe('POST /api/order/place', () => {
     test('should require authentication', async () => {
-      const response = await request(TEST_URL)
+      const response = await request(app)
         .post('/api/order/place')
         .send({
           items: [],
@@ -48,7 +48,7 @@ describe('Order API Tests', () => {
 
   describe('POST /api/order/userorders', () => {
     test('should require authentication', async () => {
-      const response = await request(TEST_URL)
+      const response = await request(app)
         .post('/api/order/userorders');
 
       expect(response.status).toBe(200);
@@ -58,7 +58,7 @@ describe('Order API Tests', () => {
     test('should get user orders with valid token', async () => {
       if (!userToken) return;
 
-      const response = await request(TEST_URL)
+      const response = await request(app)
         .post('/api/order/userorders')
         .set('token', userToken);
 

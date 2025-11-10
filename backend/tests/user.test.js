@@ -1,23 +1,14 @@
 import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
 import request from 'supertest';
 import mongoose from 'mongoose';
-
-// Test server URL - will use environment variable or local
-const TEST_URL = process.env.TEST_API_URL || 'http://localhost:4000';
+import app from '../server.js';
 
 // Store test data
 let testUserToken = '';
-let testUserId = '';
 const testUserEmail = `test${Date.now()}@example.com`;
 
 describe('User API Tests', () => {
   
-  // Connect to test database before all tests
-  beforeAll(async () => {
-    // Wait a bit for server to be ready
-    await new Promise(resolve => setTimeout(resolve, 2000));
-  });
-
   // Clean up after all tests
   afterAll(async () => {
     // Close mongoose connection if any
@@ -28,7 +19,7 @@ describe('User API Tests', () => {
 
   describe('POST /api/user/register', () => {
     test('should register a new user successfully', async () => {
-      const response = await request(TEST_URL)
+      const response = await request(app)
         .post('/api/user/register')
         .send({
           name: 'Test User',
@@ -45,7 +36,7 @@ describe('User API Tests', () => {
     }, 10000);
 
     test('should fail to register with existing email', async () => {
-      const response = await request(TEST_URL)
+      const response = await request(app)
         .post('/api/user/register')
         .send({
           name: 'Test User 2',
@@ -59,7 +50,7 @@ describe('User API Tests', () => {
     }, 10000);
 
     test('should fail to register with invalid email', async () => {
-      const response = await request(TEST_URL)
+      const response = await request(app)
         .post('/api/user/register')
         .send({
           name: 'Test User',
@@ -72,7 +63,7 @@ describe('User API Tests', () => {
     }, 10000);
 
     test('should fail to register with missing fields', async () => {
-      const response = await request(TEST_URL)
+      const response = await request(app)
         .post('/api/user/register')
         .send({
           name: 'Test User',
@@ -86,7 +77,7 @@ describe('User API Tests', () => {
 
   describe('POST /api/user/login', () => {
     test('should login successfully with correct credentials', async () => {
-      const response = await request(TEST_URL)
+      const response = await request(app)
         .post('/api/user/login')
         .send({
           email: testUserEmail,
@@ -99,7 +90,7 @@ describe('User API Tests', () => {
     }, 10000);
 
     test('should fail to login with wrong password', async () => {
-      const response = await request(TEST_URL)
+      const response = await request(app)
         .post('/api/user/login')
         .send({
           email: testUserEmail,
@@ -108,11 +99,11 @@ describe('User API Tests', () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('success', false);
-      expect(response.body.message).toContain('Invalid credentials');
+      expect(response.body.message).toContain('Invalid Credentials');
     }, 10000);
 
     test('should fail to login with non-existent email', async () => {
-      const response = await request(TEST_URL)
+      const response = await request(app)
         .post('/api/user/login')
         .send({
           email: 'nonexistent@example.com',
@@ -124,7 +115,7 @@ describe('User API Tests', () => {
     }, 10000);
 
     test('should fail to login without email', async () => {
-      const response = await request(TEST_URL)
+      const response = await request(app)
         .post('/api/user/login')
         .send({
           password: 'Test123456'
@@ -137,7 +128,7 @@ describe('User API Tests', () => {
 
   describe('Cart API', () => {
     test('POST /api/cart/add - should require authentication', async () => {
-      const response = await request(TEST_URL)
+      const response = await request(app)
         .post('/api/cart/add')
         .send({
           itemId: 'test-food-id'
@@ -149,7 +140,7 @@ describe('User API Tests', () => {
     }, 10000);
 
     test('POST /api/cart/add - should add item to cart with valid token', async () => {
-      const response = await request(TEST_URL)
+      const response = await request(app)
         .post('/api/cart/add')
         .set('token', testUserToken)
         .send({
@@ -163,7 +154,7 @@ describe('User API Tests', () => {
     }, 10000);
 
     test('GET /api/cart/get - should get cart data with valid token', async () => {
-      const response = await request(TEST_URL)
+      const response = await request(app)
         .post('/api/cart/get')
         .set('token', testUserToken);
 
