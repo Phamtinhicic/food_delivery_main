@@ -24,7 +24,7 @@ const corsOptions = {
     'http://localhost:5175',
     'https://frontend-production-0b96.up.railway.app',
     'https://admin-production-642b.up.railway.app',
-    'https://restaurant-production-7d80.up.railway.app',
+    'https://restaurant-production-b7a6.up.railway.app',
     process.env.FRONTEND_URL,
     process.env.ADMIN_URL,
     process.env.RESTAURANT_URL
