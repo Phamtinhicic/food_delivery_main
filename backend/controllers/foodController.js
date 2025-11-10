@@ -1,17 +1,18 @@
 import foodModel from "../models/foodModel.js";
 import userModel from "../models/userModel.js";
-import fs from "fs";
+import { cloudinary } from "../config/cloudinary.js";
 
 // add food items
 
 const addFood = async (req, res) => {
-  let image_filename = `${req.file.filename}`;
+  // Cloudinary automatically uploads and returns URL
+  let image_url = req.file.path; // Full Cloudinary URL
   const food = new foodModel({
     name: req.body.name,
     description: req.body.description,
     price: req.body.price,
     category: req.body.category,
-    image: image_filename,
+    image: image_url,
   });
   try {
     let userData = await userModel.findById(req.body.userId);
@@ -44,7 +45,13 @@ const removeFood = async (req, res) => {
     let userData = await userModel.findById(req.body.userId);
     if (userData && userData.role === "admin") {
       const food = await foodModel.findById(req.body.id);
-      fs.unlink(`uploads/${food.image}`, () => {});
+      
+      // Delete image from Cloudinary if it's a Cloudinary URL
+      if (food.image && food.image.includes('cloudinary.com')) {
+        const publicId = food.image.split('/').slice(-2).join('/').split('.')[0];
+        await cloudinary.uploader.destroy(publicId);
+      }
+      
       await foodModel.findByIdAndDelete(req.body.id);
       res.json({ success: true, message: "Food Removed" });
     } else {
@@ -101,9 +108,12 @@ const updateFood = async (req, res) => {
     
     // Update image if new one provided
     if (req.file) {
-      // Delete old image
-      fs.unlink(`uploads/${food.image}`, () => {});
-      food.image = req.file.filename;
+      // Delete old image from Cloudinary
+      if (food.image && food.image.includes('cloudinary.com')) {
+        const publicId = food.image.split('/').slice(-2).join('/').split('.')[0];
+        await cloudinary.uploader.destroy(publicId);
+      }
+      food.image = req.file.path; // New Cloudinary URL
     }
 
     await food.save();
