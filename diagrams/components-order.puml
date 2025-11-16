@@ -1,5 +1,5 @@
 @startuml
-' Order Service detailed component diagram
+' Order Controller - ACTUAL IMPLEMENTATION
 skinparam componentStyle rectangle
 
 package "Clients" {
@@ -8,67 +8,75 @@ package "Clients" {
   [Admin Panel] <<component>>
 }
 
-package "Order Service" {
-  [Order API] <<component>>
-  [Order Processor] <<component>>
-  [Order Repository] <<component>>
-  [Order Events / Dispatcher] <<component>>
-  [Order Worker (Background)] <<component>>
-  [Order Locks / Coordinator] <<component>>
+package "Backend (Express)" {
+  [Order Controller] <<component>>
+  [Auth Middleware] <<component>>
 }
 
-database "Orders DB (orders)" as OrdersDB
-queue "Order Queue (Redis / BullMQ)" as OrderQueue
-artifact "Stripe (payments)" as Stripe
-artifact "Notification Service" as Notification
-artifact "Delivery Service" as Delivery
+database "MongoDB" {
+  [orders collection] <<database>>
+  [users collection] <<database>>
+}
 
-' Clients -> API
-[Customer App] --> [Order API] : create / query / cancel
-[Restaurant Panel] --> [Order API] : accept / update status
-[Admin Panel] --> [Order API] : override / manage
+artifact "Stripe" as Stripe
 
-' API responsibilities
-[Order API] --> [Order Repository] : read / write order records
-[Order API] --> [Order Locks / Coordinator] : acquire lock
-[Order API] --> [Order Queue] : push job for processing
+' Client interactions
+[Customer App] --> [Auth Middleware] : POST /api/order/place (token)
+[Customer App] --> [Auth Middleware] : POST /api/order/verify
+[Customer App] --> [Auth Middleware] : POST /api/order/userorders
+[Customer App] --> [Auth Middleware] : POST /api/order/confirm-delivery
 
-' Processor responsibilities
-[Order Processor] <-down- [Order Queue] : consumes jobs
-[Order Processor] --> Stripe : request payment intent
-[Order Processor] --> [Order Repository] : persist updates
-[Order Processor] --> [Order Events / Dispatcher] : emit events
+[Restaurant Panel] --> [Auth Middleware] : GET /api/order/list
+[Restaurant Panel] --> [Auth Middleware] : POST /api/order/status
+[Restaurant Panel] --> [Auth Middleware] : POST /api/order/cancel
 
-' Worker and async
-[Order Worker (Background)] --> [Order Repository] : reconcile / retries
-[Order Worker (Background)] --> [Order Queue] : re-queue on failure
+[Admin Panel] --> [Auth Middleware] : GET /api/order/list
+[Admin Panel] --> [Auth Middleware] : POST /api/order/status
+[Admin Panel] --> [Auth Middleware] : POST /api/order/cancel
 
-' Locking / concurrency
-[Order Locks / Coordinator] --> OrdersDB : advisory locks / transactions
-[Order Locks / Coordinator] --> [Order Processor] : grant/release locks
+' Middleware to Controller
+[Auth Middleware] --> [Order Controller] : verify JWT & pass userId
 
-' Events and integrations
-[Order Events / Dispatcher] --> Notification : order.created / order.updated
-[Order Events / Dispatcher] --> Delivery : assign pickup
-[Order Events / Dispatcher] --> [Admin Panel] : events (webhook / ws)
+' Order operations
+[Order Controller] --> Stripe : create checkout session
+Stripe --> [Order Controller] : redirect to payment page
+[Order Controller] --> Stripe : retrieve session (verify payment)
+[Order Controller] --> [orders collection] : save order after payment
+[Order Controller] --> [orders collection] : find orders by userId
+[Order Controller] --> [orders collection] : update order status
+[Order Controller] --> [users collection] : clear cart after order
+[Order Controller] --> [users collection] : check admin/restaurant role
 
-' Webhooks from Stripe
-Stripe --> [Order API] : webhook payment.succeeded / failed
-[Order API] --> [Order Processor] : confirm or mark failed
-
-note right of [Order Processor]
-  - validates cart and prices
-  - enforces business rules (stock, min order)
-  - calculates deliveries & ETA
+note right of [Order Controller]
+  **placeOrder**: Creates Stripe checkout session,
+  stores order data in metadata, clears cart
+  
+  **verifyOrder**: Retrieves session, confirms payment,
+  creates order in DB only if paid
+  
+  **userOrders**: Get user's orders
+  
+  **listOrders**: Admin/Restaurant view all orders
+  
+  **updateStatus**: Change order status
+  (Food Processing → Out for delivery → Delivered)
+  
+  **cancelOrder**: Cancel with reason (admin/restaurant)
+  
+  **confirmDelivery**: Customer confirms delivery
 end note
 
-note left of [Order API]
-  - exposes REST endpoints
-  - authenticates via Auth Service (JWT)
-  - uses VITE_API_URL from frontend env
+note left of Stripe
+  Uses Stripe Checkout (not Payment Intent)
+  No webhooks implemented
+  Payment verified via session retrieval
 end note
 
 actor Customer
+actor Restaurant
+actor Admin
 Customer --> [Customer App]
+Restaurant --> [Restaurant Panel]
+Admin --> [Admin Panel]
 
 @enduml

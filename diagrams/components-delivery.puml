@@ -1,48 +1,76 @@
 @startuml
-' Delivery / Driver component diagram
+' Delivery Status - ACTUAL IMPLEMENTATION (Basic Status Only)
 skinparam componentStyle rectangle
 
 package "Clients" {
-  [Driver Mobile App] <<component>>
-  [Dispatcher UI] <<component>>
+  [Customer App] <<component>>
+  [Restaurant Panel] <<component>>
+  [Admin Panel] <<component>>
 }
 
-package "Delivery Service" {
-  [Driver API] <<component>>
-  [Assignment Engine] <<component>>
-  [Location Tracker] <<component>>
-  [Route Optimizer] <<component>>
+package "Backend (Express)" {
+  [Order Controller] <<component>>
 }
 
-database "Drivers DB" as DriversDB
-database "Locations (time-series)" as LocationsDB
-artifact "Notification Service" as Notification
-artifact "Maps / Routing API" as MapsAPI
+database "MongoDB" {
+  [orders collection] <<database>>
+}
 
-' Flows
-[Driver Mobile App] --> [Driver API] : heartbeat / status / accept
-[Dispatcher UI] --> [Assignment Engine] : manual assign / override
+' Status update flows
+[Restaurant Panel] --> [Order Controller] : POST /api/order/status
+[Admin Panel] --> [Order Controller] : POST /api/order/status
+[Customer App] --> [Order Controller] : POST /api/order/confirm-delivery
 
-[Driver API] --> DriversDB : update status / profile
-[Driver API] --> LocationsDB : push GPS points
-[Driver API] --> Assignment Engine : accepts / declines
+[Order Controller] --> [orders collection] : update status field
 
-[Assignment Engine] --> [Order Service] : request assignable orders
-[Assignment Engine] --> [Driver API] : notify driver
-[Assignment Engine] --> Route Optimizer : calculate best match
-[Route Optimizer] --> MapsAPI : distance / ETA
-
-[Location Tracker] --> Notification : driver near / arrived
-[Assignment Engine] --> Notification : new assignment
-
-note right of [Assignment Engine]
-  - evaluates proximity, capacity, ETA
-  - supports manual override
+note right of [Order Controller]
+  **Order Status Flow:**
+  
+  "Food Processing" (default after payment)
+  ↓
+  "Out for delivery" (restaurant/admin updates)
+  ↓
+  "Delivered" (customer confirms OR admin sets)
+  
+  Can also be "Cancelled" (admin/restaurant)
+  
+  **confirmDelivery**: Customer can confirm
+  only if status is "Out for delivery"
+  
+  **updateStatus**: Restaurant/Admin can
+  change to any status
+  
+  **cancelOrder**: Set to "Cancelled" with reason
 end note
 
-actor Driver
-actor Dispatcher
-Driver --> [Driver Mobile App]
-Dispatcher --> [Dispatcher UI]
+note left of MongoDB
+  **NO real delivery features:**
+  - No driver assignment
+  - No GPS tracking
+  - No route optimization
+  - No driver database
+  - No real-time location
+  - No ETA calculation
+  - No notifications
+  
+  Just basic status updates
+end note
+
+note bottom
+  To implement real delivery:
+  - Need driver accounts
+  - GPS tracking system
+  - Real-time updates (WebSockets)
+  - Maps API integration
+  - Push notifications
+  - Driver mobile app
+end note
+
+actor Customer
+actor Restaurant
+actor Admin
+Customer --> [Customer App]
+Restaurant --> [Restaurant Panel]
+Admin --> [Admin Panel]
 
 @enduml

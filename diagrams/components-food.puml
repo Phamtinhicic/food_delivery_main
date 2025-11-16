@@ -1,53 +1,79 @@
 @startuml
-' Food Management detailed component diagram
+' Food Controller - ACTUAL IMPLEMENTATION
 skinparam componentStyle rectangle
 
-package "Clients / Admin" {
+package "Clients" {
   [Admin Panel] <<component>>
   [Restaurant Panel] <<component>>
+  [Customer App] <<component>>
 }
 
-package "Food Service" {
-  [Food API] <<component>>
-  [Food Repository] <<component>>
-  [Media Manager] <<component>>
-  [Thumbnail / Image Worker] <<component>>
+package "Backend (Express)" {
+  [Food Controller] <<component>>
+  [Auth Middleware] <<component>>
+  [Multer + Cloudinary] <<component>>
 }
 
-database "Foods DB (foods)" as FoodsDB
-artifact "Cloudinary (Media)" as Cloudinary
-queue "Media Queue (Redis / BullMQ)" as MediaQueue
+database "MongoDB" {
+  [foods collection] <<database>>
+}
 
-' Flows
-[Admin Panel] --> [Food API] : CRUD food
-[Restaurant Panel] --> [Food API] : manage menu
+artifact "Cloudinary" as Cloudinary
 
-[Food API] --> [Food Repository] : save / read food metadata
-[Food API] --> [Media Manager] : upload / request transform
-[Food API] --> MediaQueue : enqueue image processing
+' Client interactions
+[Admin Panel] --> [Auth Middleware] : POST /api/food/add (with image)
+[Admin Panel] --> [Auth Middleware] : POST /api/food/remove
+[Admin Panel] --> [Auth Middleware] : PUT /api/food/:id/status
 
-[Media Manager] --> Cloudinary : upload / delete / transform
-[Thumbnail / Image Worker] <-down- MediaQueue : generate sizes
-[Thumbnail / Image Worker] --> Cloudinary : upload thumbnails
+[Customer App] --> [Food Controller] : GET /api/food/list (no auth)
+[Restaurant Panel] --> [Auth Middleware] : POST /api/food/add
+[Restaurant Panel] --> [Auth Middleware] : POST /api/food/remove
 
-[Food Repository] --> FoodsDB : store metadata, image URLs, tags
+' Middleware to Controller
+[Auth Middleware] --> [Food Controller] : verify JWT & pass userId
 
-note right of [Media Manager]
-  - signs upload with secure presigned URL if using direct upload
-  - validates image type/size
-  - uses Cloudinary API keys from env
+' Food operations
+[Food Controller] --> [Multer + Cloudinary] : upload image file
+[Multer + Cloudinary] --> Cloudinary : direct upload
+Cloudinary --> [Multer + Cloudinary] : return full URL
+[Multer + Cloudinary] --> [Food Controller] : req.file.path (URL)
+
+[Food Controller] --> [foods collection] : save food with Cloudinary URL
+[Food Controller] --> [foods collection] : find all foods
+[Food Controller] --> [foods collection] : delete food by id
+[Food Controller] --> [foods collection] : update food availability
+[Food Controller] --> Cloudinary : delete image (extract publicId from URL)
+
+note right of [Food Controller]
+  **addFood**: Upload image to Cloudinary,
+  save food with image URL (admin only)
+  
+  **listFood**: Get all foods (public)
+  
+  **removeFood**: Delete from DB and Cloudinary
+  (admin only)
+  
+  **toggleFoodStatus**: Enable/disable food item
+  
+  Authorization: Checks user.role === "admin"
+  in userModel
 end note
 
-note left of [Food API]
-  - validates fields (price, category)
-  - enforces authorization (Admin/Restaurant roles)
+note left of Cloudinary
+  Multer-storage-cloudinary middleware
+  handles direct upload
+  Returns full URL: 
+  https://res.cloudinary.com/.../image.jpg
+  
+  No queue or background processing
+  Upload is synchronous
 end note
 
-[Food API] --> [Order Service] : provide product details (read)
-
-actor Restaurant
 actor Admin
-Restaurant --> [Restaurant Panel]
+actor Restaurant
+actor Customer
 Admin --> [Admin Panel]
+Restaurant --> [Restaurant Panel]
+Customer --> [Customer App]
 
 @enduml

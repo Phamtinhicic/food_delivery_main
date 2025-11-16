@@ -11,82 +11,82 @@ package "Clients" {
   [Restaurant Panel] <<component>>
 }
 
-package "Gateway / Web" {
-  [Nginx / Static CDN] <<component>>
-  [API Gateway] <<component>>
+package "Frontend Services" {
+  [Nginx (Static)] <<component>>
 }
 
-package "Backend Services" {
-  [Auth Service] <<component>>
-  [User Service] <<component>>
-  [Food Service] <<component>>
-  [Order Service] <<component>>
-  [Payment Service (Stripe)] <<component>>
-  [Notification Service] <<component>>
-  [Delivery / Driver Service] <<component>>
+package "Backend (Node.js/Express)" {
+  [Express API Server] <<component>>
+  [User Controller] <<component>>
+  [Food Controller] <<component>>
+  [Cart Controller] <<component>>
+  [Order Controller] <<component>>
+  [Auth Middleware] <<component>>
 }
 
 database "Primary DB (MongoDB)" as MongoDB
-database "Cache (Redis)" as Redis
 artifact "Cloudinary (Media)" as Cloudinary
-artifact "Stripe" as Stripe
-artifact "Push / Email Provider" as Provider
+artifact "Stripe (Payment)" as Stripe
 
-' Component relationships
-[Customer App] --> [Nginx / Static CDN] : fetch SPA
-[Admin Panel] --> [Nginx / Static CDN] : fetch SPA
-[Restaurant Panel] --> [Nginx / Static CDN] : fetch SPA
-
-[Customer App] --> [API Gateway] : REST / GraphQL
-[Admin Panel] --> [API Gateway] : REST
-[Restaurant Panel] --> [API Gateway] : REST
-
-[API Gateway] --> [Auth Service] : authenticate / JWT
-[API Gateway] --> [User Service] : user CRUD
-[API Gateway] --> [Food Service] : list / upload
-[API Gateway] --> [Order Service] : create / update / track
-[API Gateway] --> [Payment Service (Stripe)] : payment flow
-[API Gateway] --> [Notification Service] : notify
-[API Gateway] --> [Delivery / Driver Service] : assign / track
-
-' Service to DB / infra
-[User Service] --> MongoDB : users collection
-[Food Service] --> MongoDB : foods collection
-[Order Service] --> MongoDB : orders collection
-[Order Service] --> Redis : order locks / short-lived state
-[Delivery / Driver Service] --> MongoDB : drivers / locations
-
-' Integrations
-[Food Service] --> Cloudinary : upload / delete images
-[Payment Service (Stripe)] --> Stripe : charge / webhook
-[Notification Service] --> Provider : send email / push
-
-' Internal interactions
-[Order Service] --> [Payment Service (Stripe)] : create payment intent
-[Payment Service (Stripe)] --> [Order Service] : webhook -> confirm / fail
-[Order Service] --> [Notification Service] : order updates
-[Order Service] --> [Delivery / Driver Service] : request pickup
-[Delivery / Driver Service] --> [Notification Service] : driver updates
-
-' Admin and Restaurant specific interactions
-[Admin Panel] --> [Food Service] : create / update / delete food
-[Restaurant Panel] --> [Order Service] : accept / prepare orders
-[Restaurant Panel] --> [Food Service] : manage menu
-
-note right of [Order Service]
-  - persists orders
-  - emits events (order.created, order.updated)
-  - enforces business rules
+note right of Stripe
+  No Redis/Queue currently implemented
+  Payment handled via Stripe Checkout
+  Notifications: Not yet implemented
+  Delivery tracking: Basic status only
 end note
 
-note left of [Payment Service (Stripe)]
-  - uses `ADMIN_SETUP_SECRET` for admin one-time operations
-  - implements Stripe webhooks
+' Static file serving
+[Customer App] --> [Nginx (Static)] : GET / (SPA)
+[Admin Panel] --> [Nginx (Static)] : GET / (SPA)
+[Restaurant Panel] --> [Nginx (Static)] : GET / (SPA)
+
+' API calls
+[Customer App] --> [Express API Server] : REST API (port 4000)
+[Admin Panel] --> [Express API Server] : REST API
+[Restaurant Panel] --> [Express API Server] : REST API
+
+' Express routes to controllers
+[Express API Server] --> [Auth Middleware] : verify JWT token
+[Auth Middleware] --> [User Controller] : /api/user (register, login)
+[Auth Middleware] --> [Food Controller] : /api/food (list, add, remove)
+[Auth Middleware] --> [Cart Controller] : /api/cart (add, remove, get)
+[Auth Middleware] --> [Order Controller] : /api/order (place, verify, status)
+
+' Controllers to Database
+[User Controller] --> MongoDB : users collection
+[Food Controller] --> MongoDB : foods collection
+[Cart Controller] --> MongoDB : users.cartData
+[Order Controller] --> MongoDB : orders collection
+
+' External integrations
+[Food Controller] --> Cloudinary : upload/delete images
+[Order Controller] --> Stripe : create checkout session
+Stripe --> [Order Controller] : webhook (payment verified)
+
+' User operations
+[User Controller] -right-> [Auth Middleware] : create JWT token
+[Order Controller] -up-> [User Controller] : clear cart after order
+
+note right of [Order Controller]
+  - Creates Stripe checkout session
+  - Verifies payment via session ID
+  - Updates order status (Food Processing, Out for delivery, Delivered)
+  - Cancel order (admin/restaurant only)
+  - Confirm delivery (customer)
 end note
 
-' Optional background processing / queue
-[Order Service] ..> [Notification Service] : async (queue)
-[Order Service] ..> [Delivery / Driver Service] : async (queue)
+note left of [User Controller]
+  - Register/Login with bcrypt
+  - JWT token generation
+  - Role-based access (user/admin/restaurant)
+  - Uses ADMIN_SETUP_SECRET for admin setup
+end note
+
+note right of [Food Controller]
+  - CRUD operations for menu items
+  - Cloudinary integration for images
+  - Admin/Restaurant authorization required for add/remove
+end note
 
 ' External actors (optional)
 actor Customer
