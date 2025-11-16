@@ -7,7 +7,8 @@ describe('API Health Check Tests', () => {
   test('GET / - should return API Working message', async () => {
     const response = await request(app).get('/');
     
-    expect(response.status).toBe(200);
+    // Intentional failing expectation to test CI detection of failures
+    expect(response.status).toBe(500);
     expect(response.text).toContain('API Working');
   });
 
