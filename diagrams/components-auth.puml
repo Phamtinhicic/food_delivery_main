@@ -1,0 +1,44 @@
+@startuml
+' Auth / User component diagram
+skinparam componentStyle rectangle
+
+package "Clients" {
+  [Customer App] <<component>>
+  [Admin Panel] <<component>>
+}
+
+package "Auth Service" {
+  [Auth API] <<component>>
+  [JWT Manager] <<component>>
+  [Session Store] <<component>>
+  [Password Reset / Emailer] <<component>>
+}
+
+database "Users DB (users)" as UsersDB
+database "Sessions / Tokens (Redis)" as SessionsDB
+artifact "Email Provider" as EmailProvider
+
+' Flows
+[Customer App] --> [Auth API] : login / register / refresh
+[Admin Panel] --> [Auth API] : admin login
+
+[Auth API] --> [JWT Manager] : sign / verify tokens
+[Auth API] --> UsersDB : create / read / update users
+[Auth API] --> SessionsDB : store refresh tokens / sessions
+
+[JWT Manager] --> [Auth API] : validate token
+[Password Reset / Emailer] --> EmailProvider : send reset link
+
+note right of [Auth API]
+  - uses bcrypt for password hashing
+  - supports OAuth (optional)
+  - issues access token (JWT) and refresh token
+end note
+
+[Auth API] --> [User Service] : user profile / roles
+[User Service] --> UsersDB : user queries
+
+actor Customer
+Customer --> [Customer App]
+
+@enduml

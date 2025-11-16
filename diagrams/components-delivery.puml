@@ -1,0 +1,48 @@
+@startuml
+' Delivery / Driver component diagram
+skinparam componentStyle rectangle
+
+package "Clients" {
+  [Driver Mobile App] <<component>>
+  [Dispatcher UI] <<component>>
+}
+
+package "Delivery Service" {
+  [Driver API] <<component>>
+  [Assignment Engine] <<component>>
+  [Location Tracker] <<component>>
+  [Route Optimizer] <<component>>
+}
+
+database "Drivers DB" as DriversDB
+database "Locations (time-series)" as LocationsDB
+artifact "Notification Service" as Notification
+artifact "Maps / Routing API" as MapsAPI
+
+' Flows
+[Driver Mobile App] --> [Driver API] : heartbeat / status / accept
+[Dispatcher UI] --> [Assignment Engine] : manual assign / override
+
+[Driver API] --> DriversDB : update status / profile
+[Driver API] --> LocationsDB : push GPS points
+[Driver API] --> Assignment Engine : accepts / declines
+
+[Assignment Engine] --> [Order Service] : request assignable orders
+[Assignment Engine] --> [Driver API] : notify driver
+[Assignment Engine] --> Route Optimizer : calculate best match
+[Route Optimizer] --> MapsAPI : distance / ETA
+
+[Location Tracker] --> Notification : driver near / arrived
+[Assignment Engine] --> Notification : new assignment
+
+note right of [Assignment Engine]
+  - evaluates proximity, capacity, ETA
+  - supports manual override
+end note
+
+actor Driver
+actor Dispatcher
+Driver --> [Driver Mobile App]
+Dispatcher --> [Dispatcher UI]
+
+@enduml

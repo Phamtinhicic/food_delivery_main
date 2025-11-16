@@ -1,0 +1,40 @@
+@startuml
+' Payment component diagram (Stripe integration)
+skinparam componentStyle rectangle
+
+package "Clients" {
+  [Customer App] <<component>>
+  [Admin Panel] <<component>>
+}
+
+package "Payment Service" {
+  [Payment API] <<component>>
+  [Payment Processor] <<component>>
+  [Webhook Handler] <<component>>
+}
+
+artifact "Stripe" as Stripe
+database "Payments DB (transactions)" as PaymentsDB
+artifact "Order Service" as OrderService
+
+' Flow
+[Customer App] --> [Payment API] : create payment intent
+[Payment API] --> Stripe : create payment_intent
+[Payment API] --> PaymentsDB : store intent
+
+' Webhooks
+Stripe --> [Webhook Handler] : payment_intent.succeeded / failed
+[Webhook Handler] --> [Payment Processor] : validate & process
+[Payment Processor] --> PaymentsDB : update status
+[Payment Processor] --> OrderService : confirm order / cancel
+
+note right of [Payment API]
+  - idempotent handling
+  - signs webhooks with secret
+  - retries on failures
+end note
+
+actor Customer
+Customer --> [Customer App]
+
+@enduml

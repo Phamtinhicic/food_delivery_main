@@ -1,0 +1,53 @@
+@startuml
+' Food Management detailed component diagram
+skinparam componentStyle rectangle
+
+package "Clients / Admin" {
+  [Admin Panel] <<component>>
+  [Restaurant Panel] <<component>>
+}
+
+package "Food Service" {
+  [Food API] <<component>>
+  [Food Repository] <<component>>
+  [Media Manager] <<component>>
+  [Thumbnail / Image Worker] <<component>>
+}
+
+database "Foods DB (foods)" as FoodsDB
+artifact "Cloudinary (Media)" as Cloudinary
+queue "Media Queue (Redis / BullMQ)" as MediaQueue
+
+' Flows
+[Admin Panel] --> [Food API] : CRUD food
+[Restaurant Panel] --> [Food API] : manage menu
+
+[Food API] --> [Food Repository] : save / read food metadata
+[Food API] --> [Media Manager] : upload / request transform
+[Food API] --> MediaQueue : enqueue image processing
+
+[Media Manager] --> Cloudinary : upload / delete / transform
+[Thumbnail / Image Worker] <-down- MediaQueue : generate sizes
+[Thumbnail / Image Worker] --> Cloudinary : upload thumbnails
+
+[Food Repository] --> FoodsDB : store metadata, image URLs, tags
+
+note right of [Media Manager]
+  - signs upload with secure presigned URL if using direct upload
+  - validates image type/size
+  - uses Cloudinary API keys from env
+end note
+
+note left of [Food API]
+  - validates fields (price, category)
+  - enforces authorization (Admin/Restaurant roles)
+end note
+
+[Food API] --> [Order Service] : provide product details (read)
+
+actor Restaurant
+actor Admin
+Restaurant --> [Restaurant Panel]
+Admin --> [Admin Panel]
+
+@enduml

@@ -1,0 +1,74 @@
+@startuml
+' Order Service detailed component diagram
+skinparam componentStyle rectangle
+
+package "Clients" {
+  [Customer App] <<component>>
+  [Restaurant Panel] <<component>>
+  [Admin Panel] <<component>>
+}
+
+package "Order Service" {
+  [Order API] <<component>>
+  [Order Processor] <<component>>
+  [Order Repository] <<component>>
+  [Order Events / Dispatcher] <<component>>
+  [Order Worker (Background)] <<component>>
+  [Order Locks / Coordinator] <<component>>
+}
+
+database "Orders DB (orders)" as OrdersDB
+queue "Order Queue (Redis / BullMQ)" as OrderQueue
+artifact "Stripe (payments)" as Stripe
+artifact "Notification Service" as Notification
+artifact "Delivery Service" as Delivery
+
+' Clients -> API
+[Customer App] --> [Order API] : create / query / cancel
+[Restaurant Panel] --> [Order API] : accept / update status
+[Admin Panel] --> [Order API] : override / manage
+
+' API responsibilities
+[Order API] --> [Order Repository] : read / write order records
+[Order API] --> [Order Locks / Coordinator] : acquire lock
+[Order API] --> [Order Queue] : push job for processing
+
+' Processor responsibilities
+[Order Processor] <-down- [Order Queue] : consumes jobs
+[Order Processor] --> Stripe : request payment intent
+[Order Processor] --> [Order Repository] : persist updates
+[Order Processor] --> [Order Events / Dispatcher] : emit events
+
+' Worker and async
+[Order Worker (Background)] --> [Order Repository] : reconcile / retries
+[Order Worker (Background)] --> [Order Queue] : re-queue on failure
+
+' Locking / concurrency
+[Order Locks / Coordinator] --> OrdersDB : advisory locks / transactions
+[Order Locks / Coordinator] --> [Order Processor] : grant/release locks
+
+' Events and integrations
+[Order Events / Dispatcher] --> Notification : order.created / order.updated
+[Order Events / Dispatcher] --> Delivery : assign pickup
+[Order Events / Dispatcher] --> [Admin Panel] : events (webhook / ws)
+
+' Webhooks from Stripe
+Stripe --> [Order API] : webhook payment.succeeded / failed
+[Order API] --> [Order Processor] : confirm or mark failed
+
+note right of [Order Processor]
+  - validates cart and prices
+  - enforces business rules (stock, min order)
+  - calculates deliveries & ETA
+end note
+
+note left of [Order API]
+  - exposes REST endpoints
+  - authenticates via Auth Service (JWT)
+  - uses VITE_API_URL from frontend env
+end note
+
+actor Customer
+Customer --> [Customer App]
+
+@enduml
