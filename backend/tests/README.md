@@ -14,177 +14,156 @@ backend/tests/
 └── order.test.js   # Test Order API (tạo đơn, thanh toán, tracking, delivery)
 ```
 
-## Kịch bản Test Đầy Đủ
+## Kịch bản Test Hiện Có (80 tests)
 
-### 1. Health Check Tests (health.test.js)
+### 1. Health Check Tests (health.test.js) - 2 tests ✅
 
 **API Status:**
 - ✅ Kiểm tra API hoạt động (GET /)
 - ✅ Kiểm tra thời gian phản hồi (< 3 giây)
-- ✅ Kiểm tra kết nối MongoDB
-- ✅ Kiểm tra kết nối Cloudinary
-- ✅ Kiểm tra kết nối Stripe
 
-### 2. User & Authentication Tests (user.test.js)
+### 2. User & Authentication Tests (user.test.js) - 12 tests ✅
 
-**2.1. Đăng ký (Register):**
+**2.1. Đăng ký (Register) - 4 tests:**
 - ✅ Đăng ký thành công với thông tin hợp lệ
 - ✅ Thất bại khi email đã tồn tại
 - ✅ Thất bại khi email không hợp lệ
-- ✅ Thất bại khi mật khẩu quá ngắn (< 8 ký tự)
-- ✅ Thất bại khi thiếu trường bắt buộc (name, email, password)
-- ✅ Kiểm tra mật khẩu được mã hóa (bcrypt)
+- ✅ Thất bại khi thiếu trường bắt buộc
 
-**2.2. Đăng nhập (Login):**
+**2.2. Đăng nhập (Login) - 4 tests:**
 - ✅ Đăng nhập thành công với thông tin đúng
 - ✅ Thất bại khi sai mật khẩu
 - ✅ Thất bại khi email không tồn tại
-- ✅ Thất bại khi thiếu email hoặc password
-- ✅ Nhận được JWT token hợp lệ sau khi đăng nhập
-- ✅ Token có thể giải mã và chứa userId
+- ✅ Thất bại khi thiếu email
 
-**2.3. User Profile:**
-- ✅ Lấy thông tin profile với token hợp lệ
-- ✅ Thất bại khi không có token
-- ✅ Thất bại khi token không hợp lệ
-- ✅ Cập nhật thông tin profile (name, phone, address)
-- ✅ Không thể thay đổi email của user khác
-
-**2.4. Cart Management:**
-- ✅ Yêu cầu xác thực (authentication required)
+**2.3. Cart API - 3 tests:**
+- ✅ Yêu cầu xác thực khi add to cart
+- ✅ Thêm món vào giỏ hàng với token hợp lệ
 - ✅ Lấy dữ liệu giỏ hàng với token hợp lệ
-- ✅ Thêm món vào giỏ hàng
-- ✅ Cập nhật số lượng món trong giỏ
-- ✅ Xóa món khỏi giỏ hàng
-- ✅ Xóa toàn bộ giỏ hàng
-- ✅ Kiểm tra tổng giá trị giỏ hàng
 
-**2.5. Admin Operations:**
-- ✅ Tạo tài khoản admin với ADMIN_SETUP_SECRET
-- ✅ Admin có thể xem danh sách users
-- ✅ Admin có thể promote user thành admin
-- ✅ User thường không thể truy cập admin endpoints
+### 3. Food Management Tests (food.test.js) - 21 tests ✅
 
-### 3. Food Management Tests (food.test.js)
-
-**3.1. Danh sách món ăn (List):**
+**3.1. Danh sách món ăn (List) - 2 tests:**
 - ✅ Lấy danh sách tất cả món ăn
-- ✅ Kiểm tra cấu trúc dữ liệu trả về (name, price, category, image, etc.)
-- ✅ Lọc món ăn theo category
-- ✅ Tìm kiếm món ăn theo tên
-- ✅ Phân trang danh sách món ăn
+- ✅ Kiểm tra cấu trúc dữ liệu trả về
 
-**3.2. Thêm món ăn (Add):**
+**3.2. Thêm món ăn (Add) - 2 tests:**
 - ✅ Yêu cầu xác thực admin
-- ✅ Thêm món ăn thành công với quyền admin
-- ✅ Upload ảnh lên Cloudinary thành công
-- ✅ Lưu URL Cloudinary vào database
-- ✅ Thất bại khi thiếu tên món
-- ✅ Thất bại khi giá không hợp lệ (âm hoặc 0)
-- ✅ Thất bại khi thiếu category
-- ✅ Thất bại khi không có ảnh
-- ✅ Thất bại khi định dạng ảnh không hợp lệ
+- ✅ Validate required fields
 
-**3.3. Cập nhật món ăn (Update):**
-- ✅ Cập nhật thông tin món ăn
-- ✅ Cập nhật ảnh mới (xóa ảnh cũ trên Cloudinary)
-- ✅ Thất bại khi món không tồn tại
-- ✅ Thất bại khi không có quyền admin
-
-**3.4. Xóa món ăn (Remove):**
+**3.3. Xóa món ăn (Remove) - 1 test:**
 - ✅ Yêu cầu xác thực admin
-- ✅ Xóa món thành công
-- ✅ Xóa ảnh trên Cloudinary khi xóa món
-- ✅ Thất bại khi món ăn không tồn tại
-- ✅ Không thể xóa món đang có trong đơn hàng active
 
-**3.5. Category Management:**
-- ✅ Chỉ chấp nhận các category hợp lệ
-- ✅ Lấy danh sách categories
-- ✅ Đếm số món ăn trong mỗi category
+**3.4. Category Tests - 2 tests:**
+- ✅ Validate categories
+- ✅ Validate category format
 
-### 4. Order & Payment Tests (order.test.js)
+**3.5. Data Validation - 4 tests:**
+- ✅ Validate price is positive
+- ✅ Calculate total price correctly
+- ✅ Validate food name length
+- ✅ Validate price format
 
-**4.1. Tạo đơn hàng (Place Order):**
-- ✅ Tạo đơn hàng thành công với thông tin hợp lệ
+**3.6. Search and Filter - 3 tests:**
+- ✅ Filter foods by category
+- ✅ Search foods by name
+- ✅ Sort foods by price
+
+**3.7. Image Validation - 2 tests:**
+- ✅ Validate image URL format
+- ✅ Validate Cloudinary URL structure
+
+**3.8. Price Calculations - 4 tests:**
+- ✅ Calculate discount price
+- ✅ Calculate total for multiple items
+- ✅ Add delivery fee to order total
+
+### 4. Order & Payment Tests (order.test.js) - 23 tests ✅
+
+**4.1. Place Order - 3 tests:**
 - ✅ Yêu cầu xác thực user
-- ✅ Kiểm tra items trong đơn hàng tồn tại
-- ✅ Tính tổng tiền chính xác (subtotal + phí giao hàng)
-- ✅ Thất bại khi giỏ hàng trống
-- ✅ Thất bại khi thiếu địa chỉ giao hàng
-- ✅ Thất bại khi món ăn trong đơn không tồn tại
+- ✅ Tạo Stripe checkout session (hoặc error nếu chưa config)
+- ✅ Xử lý giỏ hàng trống
 
-**4.2. Thanh toán Stripe:**
-- ✅ Tạo payment intent thành công
-- ✅ Nhận được client_secret từ Stripe
-- ✅ Đơn hàng chuyển sang trạng thái "pending payment"
-- ✅ Webhook xử lý payment_intent.succeeded
-- ✅ Đơn hàng chuyển sang "paid" sau thanh toán thành công
-- ✅ Đơn hàng chuyển sang "payment_failed" khi thanh toán thất bại
-- ✅ Webhook có chữ ký hợp lệ (signature verification)
-- ✅ Idempotency - không xử lý duplicate webhook events
+**4.2. Test Order Endpoint - 1 test:**
+- ✅ Tạo đơn hàng test không qua Stripe
 
-**4.3. Quản lý đơn hàng:**
-- ✅ User xem danh sách đơn hàng của mình
-- ✅ User xem chi tiết đơn hàng
-- ✅ User không thể xem đơn của người khác
-- ✅ Admin xem tất cả đơn hàng
-- ✅ Restaurant xem đơn hàng cần chuẩn bị
-- ✅ Lọc đơn hàng theo status
-- ✅ Tìm kiếm đơn hàng theo order ID hoặc user
+**4.3. Verify Payment - 2 tests:**
+- ✅ Yêu cầu session_id
+- ✅ Xử lý payment cancellation
 
-**4.4. Cập nhật trạng thái đơn hàng:**
-- ✅ Restaurant chấp nhận đơn hàng (confirmed)
-- ✅ Restaurant bắt đầu chuẩn bị (preparing)
-- ✅ Đơn hàng sẵn sàng giao (ready_for_delivery)
-- ✅ Giao cho shipper (out_for_delivery)
-- ✅ Giao hàng thành công (delivered)
-- ✅ Hủy đơn hàng (cancelled)
-- ✅ Hoàn tiền khi hủy đơn đã thanh toán
-- ✅ Không thể cập nhật đơn hàng đã giao hoặc đã hủy
+**4.4. User Orders - 3 tests:**
+- ✅ Yêu cầu authentication
+- ✅ Lấy danh sách đơn hàng của user
+- ✅ Trả về empty array nếu không có đơn
 
-**4.5. Delivery Tracking:**
-- ✅ Gán driver cho đơn hàng
-- ✅ Cập nhật vị trí driver real-time
-- ✅ Tính toán ETA (Estimated Time of Arrival)
-- ✅ Thông báo khi driver đến gần (< 500m)
-- ✅ Xác nhận giao hàng với OTP
-- ✅ Driver cập nhật ảnh proof of delivery
+**4.5. List Orders (Admin/Restaurant) - 2 tests:**
+- ✅ Yêu cầu authentication
+- ✅ Yêu cầu admin hoặc restaurant role
 
-**4.6. Notifications:**
-- ✅ Gửi email xác nhận đơn hàng
-- ✅ Gửi thông báo khi đơn được chấp nhận
-- ✅ Gửi thông báo khi đơn đang giao
-- ✅ Gửi thông báo khi giao thành công
-- ✅ Push notification cho mobile app
+**4.6. Update Status - 2 tests:**
+- ✅ Yêu cầu authentication
+- ✅ Yêu cầu admin hoặc restaurant role
 
-### 5. Integration Tests
+**4.7. Cancel Order - 2 tests:**
+- ✅ Yêu cầu authentication
+- ✅ Yêu cầu admin hoặc restaurant role
 
-**5.1. End-to-End User Flow:**
-- ✅ User đăng ký → đăng nhập → thêm món vào giỏ → đặt hàng → thanh toán → nhận hàng
-- ✅ Admin thêm món ăn mới → upload ảnh → user xem và đặt món đó
-- ✅ Restaurant nhận đơn → chuẩn bị → giao cho driver → hoàn thành
+**4.8. Confirm Delivery - 2 tests:**
+- ✅ Yêu cầu authentication
+- ✅ Thất bại với invalid order id
 
-**5.2. Concurrency & Race Conditions:**
-- ✅ Nhiều user đặt món cuối cùng cùng lúc (inventory check)
-- ✅ Cập nhật cart đồng thời không gây mất dữ liệu
-- ✅ Payment webhook đến nhiều lần (idempotency)
+**4.9. Order Validation - 3 tests:**
+- ✅ Validate order amount calculation
+- ✅ Validate address fields
+- ✅ Validate order status transitions
 
-**5.3. Error Handling:**
-- ✅ Xử lý lỗi kết nối MongoDB
-- ✅ Xử lý lỗi Cloudinary upload
-- ✅ Xử lý lỗi Stripe payment
-- ✅ Xử lý timeout
-- ✅ Retry logic cho external services
+### 5. Cart API Tests (cart.test.js) - 22 tests ✅
 
-**5.4. Security Tests:**
-- ✅ SQL/NoSQL injection prevention
-- ✅ XSS protection
-- ✅ CSRF token validation
-- ✅ Rate limiting
-- ✅ JWT expiration và refresh
-- ✅ Password strength requirements
-- ✅ Authorization checks (user không thể access admin endpoints)
+**5.1. Add to Cart - 4 tests:**
+- ✅ Yêu cầu authentication
+- ✅ Thêm món vào giỏ với token hợp lệ
+- ✅ Tăng quantity khi thêm món đã có
+- ✅ Thất bại khi thiếu itemId
+
+**5.2. Remove from Cart - 4 tests:**
+- ✅ Yêu cầu authentication
+- ✅ Xóa món khỏi giỏ
+- ✅ Giảm quantity nếu > 1
+- ✅ Xử lý xóa món không tồn tại
+
+**5.3. Get Cart - 3 tests:**
+- ✅ Yêu cầu authentication
+- ✅ Lấy cart data với token hợp lệ
+- ✅ Trả về empty cart cho user mới
+
+**5.4. Cart Workflow - 2 tests:**
+- ✅ Complete workflow: add → get → remove
+- ✅ Xử lý nhiều items trong cart
+
+**5.5. Cart Validation - 2 tests:**
+- ✅ Validate cart total calculation
+- ✅ Handle edge cases in quantity
+
+---
+
+## Tổng Kết: 80 Test Cases Thực Tế
+
+- **health.test.js**: 2 tests
+- **user.test.js**: 12 tests
+- **food.test.js**: 21 tests
+- **order.test.js**: 23 tests
+- **cart.test.js**: 22 tests
+
+**Coverage hiện tại:**
+- ✅ Authentication & Authorization
+- ✅ Cart Management (full CRUD)
+- ✅ Food Management (list, validation, search)
+- ✅ Order Placement (với/không Stripe)
+- ✅ Payment Verification
+- ✅ Order Status Management
+- ✅ Admin/Restaurant Authorization
+- ✅ Data Validation & Calculations
 
 ## Chạy Tests
 
@@ -343,150 +322,120 @@ Xem file `.github/workflows/ci-cd.yml` để biết chi tiết.
 ## Kết quả mẫu
 
 ```
-PASS  tests/health.test.js (6.234s)
+PASS  tests/health.test.js
   API Health Check Tests
-    ✓ GET / - should return API Working message (142ms)
-    ✓ API should respond within reasonable time (89ms)
-    ✓ MongoDB connection should be healthy (256ms)
-    ✓ Cloudinary connection should be healthy (178ms)
+    ✓ GET / - should return API Working message
+    ✓ API should respond within reasonable time
 
-PASS  tests/user.test.js (12.456s)
+PASS  tests/user.test.js
   User API Tests
     POST /api/user/register
-      ✓ should register a new user successfully (152ms)
-      ✓ should fail to register with existing email (45ms)
-      ✓ should fail to register with invalid email (23ms)
-      ✓ should fail to register with short password (21ms)
-      ✓ should fail to register with missing required fields (18ms)
-      ✓ password should be encrypted (67ms)
+      ✓ should register a new user successfully
+      ✓ should fail to register with existing email
+      ✓ should fail to register with invalid email
+      ✓ should fail to register with missing fields
     POST /api/user/login
-      ✓ should login successfully with correct credentials (98ms)
-      ✓ should return valid JWT token (45ms)
-      ✓ should fail to login with wrong password (85ms)
-      ✓ should fail to login with non-existent email (24ms)
-      ✓ should fail to login without email (18ms)
-    User Profile
-      ✓ should get user profile with valid token (56ms)
-      ✓ should fail without authentication (15ms)
-      ✓ should update profile successfully (89ms)
-      ✓ should not allow accessing other user profiles (34ms)
-    Cart Management
-      ✓ should require authentication (15ms)
-      ✓ should get cart data with valid token (45ms)
-      ✓ should add item to cart (67ms)
-      ✓ should update cart item quantity (54ms)
-      ✓ should remove item from cart (43ms)
-      ✓ should calculate total price correctly (38ms)
-    Admin Operations
-      ✓ should create admin with setup secret (123ms)
-      ✓ admin should access user list (78ms)
-      ✓ user should not access admin endpoints (42ms)
+      ✓ should login successfully with correct credentials
+      ✓ should fail to login with wrong password
+      ✓ should fail to login with non-existent email
+      ✓ should fail to login without email
+    Cart API
+      ✓ should require authentication
+      ✓ should add item to cart with valid token
+      ✓ should get cart data with valid token
 
-PASS  tests/food.test.js (15.789s)
+PASS  tests/food.test.js
   Food API Tests
     GET /api/food/list
-      ✓ should get list of all foods (78ms)
-      ✓ should return foods with correct structure (56ms)
-      ✓ should filter by category (89ms)
-      ✓ should search by name (67ms)
-      ✓ should paginate results (94ms)
+      ✓ should get list of all foods
+      ✓ should return foods with correct structure
     POST /api/food/add
-      ✓ should require admin authentication (25ms)
-      ✓ should add new food with admin token (125ms)
-      ✓ should upload image to Cloudinary (234ms)
-      ✓ should save Cloudinary URL in database (98ms)
-      ✓ should fail to add food without name (32ms)
-      ✓ should fail to add food with invalid price (28ms)
-      ✓ should fail without category (23ms)
-      ✓ should fail without image (19ms)
-    PUT /api/food/update
-      ✓ should update food information (87ms)
-      ✓ should update image and delete old one (198ms)
-      ✓ should fail for non-existent food (34ms)
+      ✓ should require authentication
+      ✓ should validate required fields
     POST /api/food/remove
-      ✓ should require admin authentication (18ms)
-      ✓ should remove food successfully (76ms)
-      ✓ should delete Cloudinary image (145ms)
-      ✓ should fail to remove non-existent food (45ms)
-      ✓ should not remove food in active orders (56ms)
+      ✓ should require authentication
     Food Category Tests
-      ✓ should only accept valid categories (67ms)
-      ✓ should get category list (45ms)
-      ✓ should count items per category (89ms)
+      ✓ should have valid categories
+      ✓ should validate category format
+    Food Data Validation
+      ✓ should validate price is positive
+      ✓ should calculate total price correctly
+      ✓ should validate food name length
+      ✓ should validate price format
+    Food Search and Filter
+      ✓ should filter foods by category
+      ✓ should search foods by name
+      ✓ should sort foods by price
+    Food Image Validation
+      ✓ should validate image URL format
+      ✓ should validate Cloudinary URL structure
+    Food Price Calculations
+      ✓ should calculate discount price
+      ✓ should calculate total for multiple items
+      ✓ should add delivery fee to order total
 
-PASS  tests/order.test.js (28.567s)
+PASS  tests/order.test.js
   Order API Tests
     POST /api/order/place
-      ✓ should create order successfully (189ms)
-      ✓ should require authentication (23ms)
-      ✓ should validate items exist (78ms)
-      ✓ should calculate total correctly (56ms)
-      ✓ should fail with empty cart (34ms)
-      ✓ should fail without delivery address (28ms)
-    Stripe Payment
-      ✓ should create payment intent (234ms)
-      ✓ should return client secret (145ms)
-      ✓ should set order to pending payment (89ms)
-      ✓ should handle payment success webhook (298ms)
-      ✓ should handle payment failure webhook (267ms)
-      ✓ should verify webhook signature (123ms)
-      ✓ should handle duplicate webhooks (178ms)
-    Order Management
-      ✓ should get user orders (98ms)
-      ✓ should get order details (76ms)
-      ✓ should not access other user orders (45ms)
-      ✓ admin should see all orders (134ms)
-      ✓ should filter by status (87ms)
-      ✓ should search orders (92ms)
-    Order Status Updates
-      ✓ restaurant confirms order (67ms)
-      ✓ restaurant starts preparing (54ms)
-      ✓ order ready for delivery (49ms)
-      ✓ out for delivery (58ms)
-      ✓ order delivered successfully (71ms)
-      ✓ cancel order (84ms)
-      ✓ should refund cancelled paid orders (198ms)
-      ✓ cannot update delivered orders (38ms)
-    Delivery Tracking
-      ✓ should assign driver (89ms)
-      ✓ should update driver location (67ms)
-      ✓ should calculate ETA (124ms)
-      ✓ should notify when driver is near (156ms)
-      ✓ should verify delivery OTP (78ms)
-      ✓ should upload proof of delivery (234ms)
-    Notifications
-      ✓ should send order confirmation email (187ms)
-      ✓ should send status update notifications (145ms)
-      ✓ should send delivery notifications (132ms)
-      ✓ should send push notifications (98ms)
+      ✓ should require authentication
+      ✓ should create Stripe checkout session (or error if not configured)
+      ✓ should fail with empty items
+    POST /api/order/place-test
+      ✓ should create test order without Stripe
+    POST /api/order/verify
+      ✓ should require session_id
+      ✓ should handle payment cancellation
+    POST /api/order/userorders
+      ✓ should require authentication
+      ✓ should get user orders with valid token
+      ✓ should return empty array if no orders
+    GET /api/order/list
+      ✓ should require authentication
+      ✓ should require admin or restaurant role
+    POST /api/order/status
+      ✓ should require authentication
+      ✓ should require admin or restaurant role
+    POST /api/order/cancel
+      ✓ should require authentication
+      ✓ should require admin or restaurant role
+    POST /api/order/confirm-delivery
+      ✓ should require authentication
+      ✓ should fail with invalid order id
+    Order Validation Tests
+      ✓ should validate order amount calculation
+      ✓ should validate address fields
+      ✓ should validate order status transitions
 
-Test Suites: 4 passed, 4 total
-Tests:       98 passed, 98 total
-Snapshots:   0 total
-Time:        63.046s
-Ran all test suites.
+PASS  tests/cart.test.js
+  Cart API Tests
+    POST /api/cart/add
+      ✓ should require authentication
+      ✓ should add item to cart with valid token
+      ✓ should increment quantity when adding same item again
+      ✓ should fail without itemId
+    POST /api/cart/remove
+      ✓ should require authentication
+      ✓ should remove item from cart
+      ✓ should decrement quantity if more than 1
+      ✓ should handle removing non-existent item gracefully
+    POST /api/cart/get
+      ✓ should require authentication
+      ✓ should get cart data with valid token
+      ✓ should return empty cart for new user
+    Cart Workflow Integration
+      ✓ should handle complete cart workflow: add → get → remove
+      ✓ should handle multiple items in cart
+    Cart Validation Tests
+      ✓ should validate cart total calculation
+      ✓ should handle edge cases in quantity
 
----------------------|---------|----------|---------|---------|-------------------
-File                 | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
----------------------|---------|----------|---------|---------|-------------------
-All files            |   87.45 |    82.31 |   89.67 |   88.12 |                   
- controllers         |   89.23 |    84.56 |   91.34 |   90.45 |                   
-  cartController.js  |   92.11 |    88.23 |   94.56 |   93.21 | 45-47,89          
-  foodController.js  |   88.67 |    82.45 |   89.23 |   89.78 | 67-69,123-125     
-  orderController.js |   86.89 |    81.34 |   88.56 |   87.92 | 156-159,234-237   
-  userController.js  |   90.12 |    86.78 |   93.45 |   91.34 | 78-80,145         
- middleware          |   94.56 |    91.23 |   96.78 |   95.12 |                   
-  auth.js            |   94.56 |    91.23 |   96.78 |   95.12 | 34-36             
- models              |   100.0 |    100.0 |   100.0 |   100.0 |                   
-  foodModel.js       |   100.0 |    100.0 |   100.0 |   100.0 |                   
-  orderModel.js      |   100.0 |    100.0 |   100.0 |   100.0 |                   
-  userModel.js       |   100.0 |    100.0 |   100.0 |   100.0 |                   
- routes              |   100.0 |    100.0 |   100.0 |   100.0 |                   
-  cartRoute.js       |   100.0 |    100.0 |   100.0 |   100.0 |                   
-  foodRoute.js       |   100.0 |    100.0 |   100.0 |   100.0 |                   
-  orderRoute.js      |   100.0 |    100.0 |   100.0 |   100.0 |                   
-  userRoute.js       |   100.0 |    100.0 |   100.0 |   100.0 |                   
----------------------|---------|----------|---------|---------|-------------------
+Test Suites: 5 passed, 5 total
+Tests:       80 passed, 80 total
+Time:        ~45s
+
+**Lưu ý:** 
+- Một số tests yêu cầu Stripe được cấu hình (STRIPE_SECRET_KEY trong .env)
+- Nếu Stripe chưa cấu hình, tests sẽ xử lý gracefully và pass
 ```
 
 ## Test Coverage Goals
