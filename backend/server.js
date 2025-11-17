@@ -1,6 +1,8 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import pino from 'pino';
+import pinoHttp from 'pino-http';
 import { connectDB } from "./config/db.js";
 import foodRouter from "./routes/foodRoute.js";
 import userRouter from "./routes/userRoute.js";
@@ -16,13 +18,18 @@ const port = process.env.PORT || 4000;
 // The webhook route below will use bodyParser.raw({type: 'application/json'})
 app.use(express.json());
 
+// Structured logging with pino
+const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
+const loggerMiddleware = pinoHttp({ logger });
+app.use(loggerMiddleware);
+
 // CORS configuration - allow frontend domains
 const corsOptions = {
   origin: [
     'http://localhost:5173',
     'http://localhost:5174',
     'http://localhost:5175',
-    'https://frontend-production-0b96.up.railway.app',
+    'https://frontend-production-7ccf.up.railway.app',
     'https://admin-production-642b.up.railway.app',
     'https://restaurant-production-b7a6.up.railway.app',
     process.env.FRONTEND_URL,
@@ -71,3 +78,15 @@ if (process.env.NODE_ENV !== 'test') {
 
 // Export app for testing
 export default app;
+
+// Error handler (logs and returns 500)
+app.use((err, req, res, next) => {
+  // pino-http attaches logger to req.log
+  try {
+    if (req && req.log) req.log.error({ err, url: req.url, body: req.body }, 'Unhandled error');
+    else logger.error({ err, url: req ? req.url : undefined }, 'Unhandled error');
+  } catch (e) {
+    logger.error({ e }, 'Error logging failed');
+  }
+  res.status(500).json({ success: false, message: 'Server error' });
+});
