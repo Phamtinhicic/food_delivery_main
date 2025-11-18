@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # Prometheus - Metrics collection and storage
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: food-delivery-prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+
+  # Grafana - Dashboards and visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: food-delivery-grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+      - loki
+    restart: unless-stopped
+
+  # Loki - Log aggregation
+  loki:
+    image: grafana/loki:2.9.3
+    container_name: food-delivery-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki-config.yml:/etc/loki/local-config.yaml
+      - loki-data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
+
+  # Promtail - Log shipper
+  promtail:
+    image: grafana/promtail:2.9.3
+    container_name: food-delivery-promtail
+    volumes:
+      - ./promtail-config.yml:/etc/promtail/config.yml
+      - /var/log:/var/log:ro
+      - ../backend/logs:/app/logs:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    restart: unless-stopped
+
+  # Node Exporter - System metrics (optional)
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: food-delivery-node-exporter
+    ports:
+      - "9100:9100"
+    restart: unless-stopped
+
+volumes:
+  prometheus-data:
+  grafana-data:
+  loki-data:
