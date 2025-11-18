@@ -3,8 +3,6 @@ import express from "express";
 import cors from "cors";
 import pino from 'pino';
 import pinoHttp from 'pino-http';
-import client from 'prom-client';
-import * as Sentry from '@sentry/node';
 import { connectDB } from "./config/db.js";
 import foodRouter from "./routes/foodRoute.js";
 import userRouter from "./routes/userRoute.js";
@@ -15,33 +13,6 @@ import orderRouter from "./routes/orderRoute.js";
 const app = express();
 const port = process.env.PORT || 4000;
 
-// Initialize Sentry (if DSN provided)
-if (process.env.SENTRY_DSN) {
-  Sentry.init({
-    dsn: process.env.SENTRY_DSN,
-    environment: process.env.NODE_ENV || 'development',
-    tracesSampleRate: 0.1,
-  });
-  app.use(Sentry.Handlers.requestHandler());
-  app.use(Sentry.Handlers.tracingHandler());
-}
-
-// Prometheus metrics setup
-client.collectDefaultMetrics({ timeout: 5000 });
-
-const httpRequestDuration = new client.Histogram({
-  name: 'http_request_duration_seconds',
-  help: 'Duration of HTTP requests in seconds',
-  labelNames: ['method', 'route', 'status_code'],
-  buckets: [0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 1, 2, 5]
-});
-
-const httpRequestTotal = new client.Counter({
-  name: 'http_requests_total',
-  help: 'Total number of HTTP requests',
-  labelNames: ['method', 'route', 'status_code']
-});
-
 //middlewares
 // We still use express.json for most routes, but Stripe requires the raw body for webhook signature verification.
 // The webhook route below will use bodyParser.raw({type: 'application/json'})
@@ -51,19 +22,6 @@ app.use(express.json());
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 const loggerMiddleware = pinoHttp({ logger });
 app.use(loggerMiddleware);
-
-// Prometheus metrics middleware
-app.use((req, res, next) => {
-  const start = Date.now();
-  res.on('finish', () => {
-    const route = req.route ? req.route.path : req.path;
-    const duration = (Date.now() - start) / 1000; // Convert to seconds
-    const labels = { method: req.method, route, status_code: res.statusCode };
-    httpRequestDuration.labels(labels).observe(duration);
-    httpRequestTotal.inc(labels);
-  });
-  next();
-});
 
 // CORS configuration - allow frontend domains
 const corsOptions = {
@@ -110,16 +68,6 @@ app.get("/healthz", (req, res) => {
   res.status(200).json({ status: "ok", message: "Server is healthy" });
 });
 
-// Metrics endpoint for Prometheus scraping
-app.get("/metrics", async (req, res) => {
-  try {
-    res.set('Content-Type', client.register.contentType);
-    res.end(await client.register.metrics());
-  } catch (error) {
-    res.status(500).end(error);
-  }
-});
-
 // Only start server if not in test environment  
 // Tests will import the app directly without starting the server
 if (process.env.NODE_ENV !== 'test') {
@@ -130,11 +78,6 @@ if (process.env.NODE_ENV !== 'test') {
 
 // Export app for testing
 export default app;
-
-// Sentry error handler (must be before other error handlers)
-if (process.env.SENTRY_DSN) {
-  app.use(Sentry.Handlers.errorHandler());
-}
 
 // Error handler (logs and returns 500)
 app.use((err, req, res, next) => {

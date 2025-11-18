@@ -16,7 +16,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@sentry/node": "^7.109.0",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.2",
     "cloudinary": "^1.41.3",
@@ -31,7 +30,6 @@
     "nodemon": "^3.1.4",
     "pino": "^8.16.0",
     "pino-http": "^8.1.0",
-    "prom-client": "^15.1.0",
     "stripe": "^16.6.0",
     "validator": "^13.12.0"
   },
