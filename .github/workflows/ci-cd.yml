@@ -80,13 +80,18 @@ jobs:
 
       - name: Push metrics to Pushgateway
         if: always()
+        continue-on-error: true
         env:
           PUSHGATEWAY_URL: ${{ secrets.PUSHGATEWAY_URL }}
         run: |
-          if [ -z "$PUSHGATEWAY_URL" ]; then
-            echo "PUSHGATEWAY_URL not set, skipping metrics push"
+          # Skip if PUSHGATEWAY_URL is not set
+          if [ -z "$PUSHGATEWAY_URL" ] || [ "$PUSHGATEWAY_URL" = "" ]; then
+            echo "⚠️  PUSHGATEWAY_URL secret not configured - skipping metrics push"
+            echo "   To enable metrics, add PUSHGATEWAY_URL to repository secrets"
             exit 0
           fi
+          
+          echo "📊 Pushing CI/CD metrics to Pushgateway..."
           
           if [ "${{ job.status }}" == "success" ]; then
             BUILD_STATUS=1
@@ -107,6 +112,8 @@ jobs:
           cicd_lines_removed{repository="${GITHUB_REPOSITORY}",branch="${GITHUB_REF_NAME}"} ${{ steps.metrics.outputs.lines_removed }}
           cicd_pipeline_timestamp{repository="${GITHUB_REPOSITORY}",branch="${GITHUB_REF_NAME}"} $(date +%s)
           EOF
+          
+          echo "✅ Metrics pushed successfully!"
 
   # Build Frontend Services
   build:
