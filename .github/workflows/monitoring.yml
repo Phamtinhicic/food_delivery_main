@@ -33,10 +33,9 @@ jobs:
       - name: Run tests
         working-directory: ./backend
         run: |
-          npm run test:unit || echo "Tests had issues"
+          npm test
           echo "TEST_RESULT=$?" >> $GITHUB_ENV
           echo "TEST_END=$(date +%s)" >> $GITHUB_ENV
-        continue-on-error: true
 
       - name: Calculate metrics
         id: metrics

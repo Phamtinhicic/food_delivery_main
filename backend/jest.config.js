@@ -3,6 +3,7 @@ export default {
   testMatch: [
     '**/tests/**/*.test.js'
   ],
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
   collectCoverageFrom: [
     'controllers/**/*.js',
     'models/**/*.js',
@@ -14,5 +15,6 @@ export default {
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
   testTimeout: 30000,
-  verbose: true
+  verbose: true,
+  forceExit: true
 };
