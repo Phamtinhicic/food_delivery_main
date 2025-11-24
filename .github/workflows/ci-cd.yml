@@ -57,13 +57,25 @@ jobs:
           SALT: 10
           DEV_PAYMENT: true
         run: |
-          set -o pipefail  # Ensure pipeline fails if any command fails
-          npm test -- --verbose 2>&1 | tee test-output.log
-          TEST_EXIT=$?
+          set -o pipefail
+          
+          # Run unit tests (always continue even if failed)
+          echo "🧪 Running Unit Tests..."
+          npm run test:unit -- --verbose 2>&1 | tee test-output.log
+          UNIT_EXIT=$?
+          
+          # Run integration tests (always run)
+          echo ""
+          echo "🔗 Running Integration Tests..."
+          npm run test:integration -- --verbose 2>&1 | tee -a test-output.log
+          INTEGRATION_EXIT=$?
+          
           echo "TEST_END=$(date +%s)" >> $GITHUB_ENV
-          if [ $TEST_EXIT -ne 0 ]; then
-            echo "❌ Tests failed with exit code $TEST_EXIT"
-            exit $TEST_EXIT
+          
+          # Report results
+          if [ $UNIT_EXIT -ne 0 ] || [ $INTEGRATION_EXIT -ne 0 ]; then
+            echo "❌ Tests failed - Unit: $UNIT_EXIT, Integration: $INTEGRATION_EXIT"
+            exit 1
           fi
           echo "✅ All tests passed"
           
