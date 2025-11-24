@@ -58,7 +58,7 @@ jobs:
           DEV_PAYMENT: true
         run: |
           set -o pipefail  # Ensure pipeline fails if any command fails
-          npm test 2>&1 | tee test-output.log
+          npm test -- --verbose 2>&1 | tee test-output.log
           TEST_EXIT=$?
           echo "TEST_END=$(date +%s)" >> $GITHUB_ENV
           if [ $TEST_EXIT -ne 0 ]; then
@@ -87,24 +87,43 @@ jobs:
           # Parse test output and send to Loki
           if [ -f test-output.log ]; then
             while IFS= read -r line; do
-              # Extract test failures
-              if echo "$line" | grep -qiE "(FAIL|Error|failed|✕)"; then
+              # Skip empty lines
+              [ -z "$line" ] && continue
+              
+              # Determine log level and test type
+              if echo "$line" | grep -qE "FAIL.*test"; then
                 LEVEL="error"
-                TEST_NAME=$(echo "$line" | grep -oP '(?<=● ).*' || echo "unknown")
-              elif echo "$line" | grep -qiE "(PASS|✓|√)"; then
+                TEST_TYPE="unit"
+              elif echo "$line" | grep -qE "PASS.*test"; then
                 LEVEL="info"
-                TEST_NAME=$(echo "$line" | grep -oP '(?<=✓ ).*' || echo "test")
+                TEST_TYPE="unit"
+              elif echo "$line" | grep -q "✓"; then
+                LEVEL="info"
+                TEST_TYPE="passed"
+              elif echo "$line" | grep -q "✕\|×"; then
+                LEVEL="error"
+                TEST_TYPE="failed"
+              elif echo "$line" | grep -qE "Tests:|Test Suites:"; then
+                if echo "$line" | grep -q "failed"; then
+                  LEVEL="error"
+                else
+                  LEVEL="info"
+                fi
+                TEST_TYPE="summary"
+              elif echo "$line" | grep -q "●"; then
+                LEVEL="error"
+                TEST_TYPE="error_detail"
               else
                 LEVEL="debug"
-                TEST_NAME="log"
+                TEST_TYPE="log"
               fi
               
               # Escape line for JSON
-              LINE_ESCAPED=$(echo "$line" | sed 's/"/\\"/g' | sed "s/'/\\'/g")
+              LINE_ESCAPED=$(echo "$line" | sed 's/"/\\"/g' | sed "s/'/\\'/g" | sed 's/\\/\\\\/g')
               
               # Create Loki JSON payload
               TIMESTAMP=$(date +%s)000000000
-              PAYLOAD="{\"streams\":[{\"stream\":{\"job\":\"github-actions\",\"repository\":\"$GITHUB_REPOSITORY\",\"branch\":\"$GITHUB_REF_NAME\",\"workflow\":\"$GITHUB_WORKFLOW\",\"run_id\":\"$GITHUB_RUN_ID\",\"level\":\"$LEVEL\",\"test\":\"$TEST_NAME\"},\"values\":[[\"$TIMESTAMP\",\"$LINE_ESCAPED\"]]}]}"
+              PAYLOAD="{\"streams\":[{\"stream\":{\"job\":\"github-actions\",\"repository\":\"$GITHUB_REPOSITORY\",\"branch\":\"$GITHUB_REF_NAME\",\"workflow\":\"$GITHUB_WORKFLOW\",\"run_id\":\"$GITHUB_RUN_ID\",\"level\":\"$LEVEL\",\"test_type\":\"$TEST_TYPE\"},\"values\":[[\"$TIMESTAMP\",\"$LINE_ESCAPED\"]]}]}"
               
               # Push to Loki
               curl -s -X POST \
