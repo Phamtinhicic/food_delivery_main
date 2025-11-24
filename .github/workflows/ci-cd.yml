@@ -56,8 +56,58 @@ jobs:
           SALT: 10
           DEV_PAYMENT: true
         run: |
-          npm test
+          npm test 2>&1 | tee test-output.log
           echo "TEST_END=$(date +%s)" >> $GITHUB_ENV
+          
+      - name: Push test logs to Loki
+        if: always()
+        continue-on-error: true
+        env:
+          LOKI_URL: ${{ secrets.GRAFANA_CLOUD_LOKI_URL }}
+          LOKI_USER: ${{ secrets.GRAFANA_CLOUD_USER }}
+          LOKI_API_KEY: ${{ secrets.GRAFANA_CLOUD_API_KEY }}
+        run: |
+          if [ -z "$LOKI_URL" ] || [ -z "$LOKI_API_KEY" ]; then
+            echo "⚠️  Loki not configured - skipping logs push"
+            echo "   Add these secrets: GRAFANA_CLOUD_LOKI_URL, GRAFANA_CLOUD_USER, GRAFANA_CLOUD_API_KEY"
+            exit 0
+          fi
+          
+          echo "📝 Pushing test logs to Loki..."
+          
+          # Parse test output and send to Loki
+          if [ -f backend/test-output.log ]; then
+            while IFS= read -r line; do
+              # Extract test failures
+              if echo "$line" | grep -qiE "(FAIL|Error|failed|✕)"; then
+                LEVEL="error"
+                TEST_NAME=$(echo "$line" | grep -oP '(?<=● ).*' || echo "unknown")
+              elif echo "$line" | grep -qiE "(PASS|✓|√)"; then
+                LEVEL="info"
+                TEST_NAME=$(echo "$line" | grep -oP '(?<=✓ ).*' || echo "test")
+              else
+                LEVEL="debug"
+                TEST_NAME="log"
+              fi
+              
+              # Escape line for JSON
+              LINE_ESCAPED=$(echo "$line" | sed 's/"/\\"/g' | sed "s/'/\\'/g")
+              
+              # Create Loki JSON payload
+              TIMESTAMP=$(date +%s)000000000
+              PAYLOAD="{\"streams\":[{\"stream\":{\"job\":\"github-actions\",\"repository\":\"$GITHUB_REPOSITORY\",\"branch\":\"$GITHUB_REF_NAME\",\"workflow\":\"$GITHUB_WORKFLOW\",\"run_id\":\"$GITHUB_RUN_ID\",\"level\":\"$LEVEL\",\"test\":\"$TEST_NAME\"},\"values\":[[\"$TIMESTAMP\",\"$LINE_ESCAPED\"]]}]}"
+              
+              # Push to Loki
+              curl -s -X POST \
+                -H "Content-Type: application/json" \
+                -u "${LOKI_USER}:${LOKI_API_KEY}" \
+                -d "$PAYLOAD" \
+                "${LOKI_URL}" >/dev/null 2>&1 || true
+              
+            done < backend/test-output.log
+            
+            echo "✅ Test logs pushed to Loki!"
+          fi
 
       - name: Calculate CI/CD metrics
         id: metrics
@@ -128,12 +178,18 @@ jobs:
           cicd_lines_removed{repository="${GITHUB_REPOSITORY}",branch="${GITHUB_REF_NAME}"} ${{ steps.metrics.outputs.lines_removed }} ${TIMESTAMP}
           EOF
           
-          # Push to Grafana Cloud using Prometheus Remote Write
+          # Push to Grafana Cloud using Prometheus format
+          # Note: Grafana Cloud accepts both remote write (protobuf) and text format
+          # Using text format for simplicity
           curl -X POST \
             -u "${GRAFANA_CLOUD_USER}:${GRAFANA_CLOUD_API_KEY}" \
-            -H "Content-Type: application/x-protobuf" \
+            -H "Content-Type: text/plain" \
             --data-binary @metrics.txt \
-            "${GRAFANA_CLOUD_URL}"
+            "${GRAFANA_CLOUD_URL}/api/v1/push" || {
+              echo "❌ Failed to push metrics"
+              cat metrics.txt
+              exit 0
+            }
           
           echo "✅ Metrics pushed to Grafana Cloud successfully!"
 
