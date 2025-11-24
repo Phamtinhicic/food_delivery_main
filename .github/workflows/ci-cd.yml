@@ -48,6 +48,8 @@ jobs:
           echo "BUILD_START=$(date +%s)" >> $GITHUB_ENV
 
       - name: Run backend tests
+        id: run-tests
+        continue-on-error: true
         working-directory: backend
         env:
           NODE_ENV: test
@@ -56,8 +58,12 @@ jobs:
           SALT: 10
           DEV_PAYMENT: true
         run: |
+          set +e  # Don't exit on error
           npm test 2>&1 | tee test-output.log
+          TEST_EXIT_CODE=$?
           echo "TEST_END=$(date +%s)" >> $GITHUB_ENV
+          echo "test_exit_code=$TEST_EXIT_CODE" >> $GITHUB_OUTPUT
+          exit $TEST_EXIT_CODE
           
       - name: Push test logs to Loki
         if: always()
@@ -148,7 +154,10 @@ jobs:
           
           echo "📊 Pushing CI/CD metrics to Grafana Cloud..."
           
-          if [ "${{ job.status }}" == "success" ]; then
+          # Check test exit code from previous step
+          TEST_EXIT_CODE="${{ steps.run-tests.outputs.test_exit_code }}"
+          
+          if [ "$TEST_EXIT_CODE" == "0" ]; then
             BUILD_STATUS=1
             TEST_STATUS=1
           else
@@ -192,6 +201,13 @@ jobs:
             }
           
           echo "✅ Metrics pushed to Grafana Cloud successfully!"
+
+      - name: Fail job if tests failed
+        if: steps.run-tests.outputs.test_exit_code != '0'
+        run: |
+          echo "❌ Tests failed with exit code: ${{ steps.run-tests.outputs.test_exit_code }}"
+          echo "Check the test logs and Grafana dashboard for details"
+          exit 1
 
   # Build Frontend Services
   build:
