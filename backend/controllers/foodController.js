@@ -1,5 +1,5 @@
-import foodModel from "../models/foodModel.js";
-import userModel from "../models/userModel.js";
+import foodRepository from "../repositories/foodRepository.js";
+import userRepository from "../repositories/userRepository.js";
 import { cloudinary } from "../config/cloudinary.js";
 
 // add food items
@@ -7,17 +7,16 @@ import { cloudinary } from "../config/cloudinary.js";
 const addFood = async (req, res) => {
   // Cloudinary automatically uploads and returns URL
   let image_url = req.file.path; // Full Cloudinary URL
-  const food = new foodModel({
-    name: req.body.name,
-    description: req.body.description,
-    price: req.body.price,
-    category: req.body.category,
-    image: image_url,
-  });
   try {
-    let userData = await userModel.findById(req.body.userId);
+    let userData = await userRepository.findById(req.body.userId);
     if (userData && userData.role === "admin") {
-      await food.save();
+      await foodRepository.create({
+        name: req.body.name,
+        description: req.body.description,
+        price: req.body.price,
+        category: req.body.category,
+        image: image_url,
+      });
       res.json({ success: true, message: "Food Added" });
     } else {
       res.json({ success: false, message: "You are not admin" });
@@ -31,7 +30,7 @@ const addFood = async (req, res) => {
 // all foods
 const listFood = async (req, res) => {
   try {
-    const foods = await foodModel.find({});
+    const foods = await foodRepository.findAll();
     res.json({ success: true, data: foods });
   } catch (error) {
     console.log(error);
@@ -42,9 +41,9 @@ const listFood = async (req, res) => {
 // remove food item
 const removeFood = async (req, res) => {
   try {
-    let userData = await userModel.findById(req.body.userId);
+    let userData = await userRepository.findById(req.body.userId);
     if (userData && userData.role === "admin") {
-      const food = await foodModel.findById(req.body.id);
+      const food = await foodRepository.findById(req.body.id);
       
       // Delete image from Cloudinary if it's a Cloudinary URL
       if (food.image && food.image.includes('cloudinary.com')) {
@@ -52,7 +51,7 @@ const removeFood = async (req, res) => {
         await cloudinary.uploader.destroy(publicId);
       }
       
-      await foodModel.findByIdAndDelete(req.body.id);
+      await foodRepository.delete(req.body.id);
       res.json({ success: true, message: "Food Removed" });
     } else {
       res.json({ success: false, message: "You are not admin" });
@@ -66,15 +65,14 @@ const removeFood = async (req, res) => {
 // toggle food availability status
 const toggleFoodStatus = async (req, res) => {
   try {
-    const food = await foodModel.findById(req.params.id);
+    const food = await foodRepository.findById(req.params.id);
     if (!food) {
       return res.json({ success: false, message: "Food not found" });
     }
     
     // Toggle available status (default true if not set)
     const newStatus = !(food.available ?? true);
-    food.available = newStatus;
-    await food.save();
+    const updatedFood = await foodRepository.update(req.params.id, { available: newStatus });
     
     res.json({ 
       success: true, 
@@ -90,21 +88,22 @@ const toggleFoodStatus = async (req, res) => {
 // update food item
 const updateFood = async (req, res) => {
   try {
-    let userData = await userModel.findById(req.body.userId);
+    let userData = await userRepository.findById(req.body.userId);
     if (!userData || userData.role !== "admin") {
       return res.json({ success: false, message: "You are not admin" });
     }
 
-    const food = await foodModel.findById(req.body.id);
+    const food = await foodRepository.findById(req.body.id);
     if (!food) {
       return res.json({ success: false, message: "Food not found" });
     }
 
-    // Update fields
-    if (req.body.name) food.name = req.body.name;
-    if (req.body.description) food.description = req.body.description;
-    if (req.body.price) food.price = req.body.price;
-    if (req.body.category) food.category = req.body.category;
+    // Prepare update data
+    const updateData = {};
+    if (req.body.name) updateData.name = req.body.name;
+    if (req.body.description) updateData.description = req.body.description;
+    if (req.body.price) updateData.price = req.body.price;
+    if (req.body.category) updateData.category = req.body.category;
     
     // Update image if new one provided
     if (req.file) {
@@ -113,11 +112,11 @@ const updateFood = async (req, res) => {
         const publicId = food.image.split('/').slice(-2).join('/').split('.')[0];
         await cloudinary.uploader.destroy(publicId);
       }
-      food.image = req.file.path; // New Cloudinary URL
+      updateData.image = req.file.path; // New Cloudinary URL
     }
 
-    await food.save();
-    res.json({ success: true, message: "Food Updated", data: food });
+    const updatedFood = await foodRepository.update(req.body.id, updateData);
+    res.json({ success: true, message: "Food Updated", data: updatedFood });
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: "Error updating food" });

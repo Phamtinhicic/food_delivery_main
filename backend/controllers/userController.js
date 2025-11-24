@@ -1,4 +1,4 @@
-import userModel from "../models/userModel.js";
+import userRepository from "../repositories/userRepository.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import validator from "validator";
@@ -13,13 +13,11 @@ const makeAdmin = async (req, res) => {
   }
   
   try {
-    const user = await userModel.findOne({ email });
+    const user = await userRepository.updateRole(email, "admin");
     if (!user) {
       return res.json({ success: false, message: "User not found" });
     }
     
-    user.role = "admin";
-    await user.save();
     res.json({ success: true, message: `${email} is now admin` });
   } catch (error) {
     console.log(error);
@@ -32,17 +30,17 @@ const makeAdmin = async (req, res) => {
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
   try {
-    const user = await userModel.findOne({ email });
+    const user = await userRepository.findByEmail(email);
     if (!user) {
       return res.json({ success: false, message: "User Doesn't exist" });
     }
-    const isMatch =await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.json({ success: false, message: "Invalid Credentials" });
     }
-    const role=user.role;
+    const role = user.role;
     const token = createToken(user._id);
-    res.json({ success: true, token,role });
+    res.json({ success: true, token, role });
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: "Error" });
@@ -61,7 +59,7 @@ const registerUser = async (req, res) => {
   const { name, email, password } = req.body;
   try {
     // checking user is already exist
-    const exists = await userModel.findOne({ email });
+    const exists = await userRepository.exists(email);
     if (exists) {
       return res.json({ success: false, message: "User already exists" });
     }
@@ -78,20 +76,18 @@ const registerUser = async (req, res) => {
     }
 
     // hashing user password
-
     const salt = await bcrypt.genSalt(Number(process.env.SALT));
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const newUser = new userModel({
+    const user = await userRepository.create({
       name: name,
       email: email,
       password: hashedPassword,
     });
 
-    const user = await newUser.save();
-    const role=user.role;
+    const role = user.role;
     const token = createToken(user._id);
-    res.json({ success: true, token, role});
+    res.json({ success: true, token, role });
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: "Error" });
@@ -103,12 +99,12 @@ const createUserByAdmin = async (req, res) => {
   const { name, email, password, role } = req.body;
   try {
     // only admin can create users here (we expect auth middleware to set req.body.userId)
-    const adminUser = await userModel.findById(req.body.userId);
+    const adminUser = await userRepository.findById(req.body.userId);
     if (!adminUser || adminUser.role !== 'admin') {
       return res.json({ success: false, message: 'You are not admin' });
     }
 
-    const exists = await userModel.findOne({ email });
+    const exists = await userRepository.exists(email);
     if (exists) {
       return res.json({ success: false, message: 'User already exists' });
     }
@@ -123,14 +119,13 @@ const createUserByAdmin = async (req, res) => {
     const salt = await bcrypt.genSalt(Number(process.env.SALT));
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const newUser = new userModel({
+    await userRepository.create({
       name: name,
       email: email,
       password: hashedPassword,
       role: role || 'user',
     });
 
-    await newUser.save();
     res.json({ success: true, message: 'User created' });
   } catch (error) {
     console.log(error);
@@ -141,11 +136,11 @@ const createUserByAdmin = async (req, res) => {
 // list all users (admin-only)
 const listAllUsers = async (req, res) => {
   try {
-    const adminUser = await userModel.findById(req.body.userId);
+    const adminUser = await userRepository.findById(req.userId || req.body.userId);
     if (!adminUser || adminUser.role !== 'admin') {
       return res.json({ success: false, message: 'You are not admin' });
     }
-    const users = await userModel.find({}).select('-password');
+    const users = await userRepository.findAll();
     res.json({ success: true, data: users });
   } catch (error) {
     console.log(error);
@@ -156,12 +151,12 @@ const listAllUsers = async (req, res) => {
 // delete user (admin-only)
 const deleteUserByAdmin = async (req, res) => {
   try {
-    const adminUser = await userModel.findById(req.body.userId);
+    const adminUser = await userRepository.findById(req.userId || req.body.userId);
     if (!adminUser || adminUser.role !== 'admin') {
       return res.json({ success: false, message: 'You are not admin' });
     }
     const { id } = req.body;
-    await userModel.findByIdAndDelete(id);
+    await userRepository.delete(id);
     res.json({ success: true, message: 'User deleted' });
   } catch (error) {
     console.log(error);
