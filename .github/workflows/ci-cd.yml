@@ -57,8 +57,15 @@ jobs:
           SALT: 10
           DEV_PAYMENT: true
         run: |
+          set -o pipefail  # Ensure pipeline fails if any command fails
           npm test 2>&1 | tee test-output.log
+          TEST_EXIT=$?
           echo "TEST_END=$(date +%s)" >> $GITHUB_ENV
+          if [ $TEST_EXIT -ne 0 ]; then
+            echo "❌ Tests failed with exit code $TEST_EXIT"
+            exit $TEST_EXIT
+          fi
+          echo "✅ All tests passed"
           
       - name: Push test logs to Loki
         if: always()
