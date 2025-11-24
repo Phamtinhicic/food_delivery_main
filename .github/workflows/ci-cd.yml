@@ -49,7 +49,6 @@ jobs:
 
       - name: Run backend tests
         id: run-tests
-        continue-on-error: true
         working-directory: backend
         env:
           NODE_ENV: test
@@ -58,16 +57,13 @@ jobs:
           SALT: 10
           DEV_PAYMENT: true
         run: |
-          set +e  # Don't exit on error
           npm test 2>&1 | tee test-output.log
-          TEST_EXIT_CODE=$?
           echo "TEST_END=$(date +%s)" >> $GITHUB_ENV
-          echo "test_exit_code=$TEST_EXIT_CODE" >> $GITHUB_OUTPUT
-          exit $TEST_EXIT_CODE
           
       - name: Push test logs to Loki
         if: always()
         continue-on-error: true
+        working-directory: backend
         env:
           LOKI_URL: ${{ secrets.GRAFANA_CLOUD_LOKI_URL }}
           LOKI_USER: ${{ secrets.GRAFANA_CLOUD_USER }}
@@ -82,7 +78,7 @@ jobs:
           echo "📝 Pushing test logs to Loki..."
           
           # Parse test output and send to Loki
-          if [ -f backend/test-output.log ]; then
+          if [ -f test-output.log ]; then
             while IFS= read -r line; do
               # Extract test failures
               if echo "$line" | grep -qiE "(FAIL|Error|failed|✕)"; then
@@ -110,7 +106,7 @@ jobs:
                 -d "$PAYLOAD" \
                 "${LOKI_URL}" >/dev/null 2>&1 || true
               
-            done < backend/test-output.log
+            done < test-output.log
             
             echo "✅ Test logs pushed to Loki!"
           fi
@@ -154,10 +150,8 @@ jobs:
           
           echo "📊 Pushing CI/CD metrics to Grafana Cloud..."
           
-          # Check test exit code from previous step
-          TEST_EXIT_CODE="${{ steps.run-tests.outputs.test_exit_code }}"
-          
-          if [ "$TEST_EXIT_CODE" == "0" ]; then
+          # Check if tests passed or failed
+          if [ "${{ steps.run-tests.outcome }}" == "success" ]; then
             BUILD_STATUS=1
             TEST_STATUS=1
           else
@@ -201,13 +195,6 @@ jobs:
             }
           
           echo "✅ Metrics pushed to Grafana Cloud successfully!"
-
-      - name: Fail job if tests failed
-        if: steps.run-tests.outputs.test_exit_code != '0'
-        run: |
-          echo "❌ Tests failed with exit code: ${{ steps.run-tests.outputs.test_exit_code }}"
-          echo "Check the test logs and Grafana dashboard for details"
-          exit 1
 
   # Build Frontend Services
   build:
