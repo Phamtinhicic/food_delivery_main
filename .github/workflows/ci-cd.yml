@@ -107,17 +107,23 @@ jobs:
               # Skip empty lines
               [ -z "$line" ] && continue
               
-              # Detect test suite type from separators
-              if echo "$line" | grep -q "UNIT TESTS START"; then
+              # Detect test suite type from separators or test files
+              if echo "$line" | grep -q "UNIT TESTS"; then
                 CURRENT_SUITE="unit"
                 LEVEL="info"
                 TEST_TYPE="separator"
-              elif echo "$line" | grep -q "INTEGRATION TESTS START"; then
+              elif echo "$line" | grep -q "INTEGRATION TESTS"; then
                 CURRENT_SUITE="integration"
                 LEVEL="info"
                 TEST_TYPE="separator"
+              elif echo "$line" | grep -q "unit\.test\.js"; then
+                CURRENT_SUITE="unit"
+              elif echo "$line" | grep -q "integration\.test\.js"; then
+                CURRENT_SUITE="integration"
+              fi
+              
               # Determine log level and test type
-              elif echo "$line" | grep -qE "FAIL.*test"; then
+              if echo "$line" | grep -qE "FAIL.*test"; then
                 LEVEL="error"
                 TEST_TYPE="test_file"
               elif echo "$line" | grep -qE "PASS.*test"; then
