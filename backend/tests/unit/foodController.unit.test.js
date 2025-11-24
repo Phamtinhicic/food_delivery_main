@@ -51,9 +51,9 @@ describe('Food Controller', () => {
       });
     });
 
-    test('TEST INTENTIONAL FAILURE - should fail to check Grafana dashboard', async () => {
-      // This test will fail intentionally to check if Grafana dashboard shows failed tests
-      expect(1 + 1).toBe(3); // This will fail
+    test('TEST INTENTIONAL FAILURE - should detect failed test in Grafana', async () => {
+      // This test will fail to verify Grafana dashboard shows failed tests
+      throw new Error('❌ INTENTIONAL TEST FAILURE for Grafana monitoring verification');
     });
 
     test('handles empty list', async () => {
