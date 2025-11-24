@@ -136,8 +136,7 @@ describe('User Controller', () => {
 
       await makeAdmin(req, res);
 
-      // Intentionally expect success:true to force a failing test for monitoring
-      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ success: false }));
     });
 
     test('make admin works with correct secret', async () => {
