@@ -51,11 +51,6 @@ describe('Food Controller', () => {
       });
     });
 
-    test('TEST INTENTIONAL FAILURE - should detect failed test in Grafana', async () => {
-      // This test will fail to verify Grafana dashboard shows failed tests
-      throw new Error('❌ INTENTIONAL TEST FAILURE for Grafana monitoring verification');
-    });
-
     test('handles empty list', async () => {
       mockFoodRepository.findAll.mockResolvedValue([]);
 
