@@ -60,17 +60,17 @@ jobs:
           set -o pipefail
           
           # Run unit tests (always continue even if failed)
-          echo "🧪 ========== UNIT TESTS =========="
+          echo "========== UNIT TESTS START =========="
           npm run test:unit -- --verbose --no-coverage 2>&1 | tee test-output.log
           UNIT_EXIT=$?
-          echo "Unit tests exit code: $UNIT_EXIT"
+          echo "========== UNIT TESTS END (exit: $UNIT_EXIT) =========="
           
           # Run integration tests (always run)
           echo ""
-          echo "🔗 ========== INTEGRATION TESTS =========="
+          echo "========== INTEGRATION TESTS START =========="
           npm run test:integration -- --verbose --no-coverage 2>&1 | tee -a test-output.log
           INTEGRATION_EXIT=$?
-          echo "Integration tests exit code: $INTEGRATION_EXIT"
+          echo "========== INTEGRATION TESTS END (exit: $INTEGRATION_EXIT) =========="
           
           echo "TEST_END=$(date +%s)" >> $GITHUB_ENV
           
@@ -108,11 +108,11 @@ jobs:
               [ -z "$line" ] && continue
               
               # Detect test suite type from separators
-              if echo "$line" | grep -q "UNIT TESTS"; then
+              if echo "$line" | grep -q "UNIT TESTS START"; then
                 CURRENT_SUITE="unit"
                 LEVEL="info"
                 TEST_TYPE="separator"
-              elif echo "$line" | grep -q "INTEGRATION TESTS"; then
+              elif echo "$line" | grep -q "INTEGRATION TESTS START"; then
                 CURRENT_SUITE="integration"
                 LEVEL="info"
                 TEST_TYPE="separator"
