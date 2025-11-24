@@ -335,6 +335,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       
       - name: Build and push Docker image
+        id: docker-build
         uses: docker/build-push-action@v5
         with:
           context: ./${{ matrix.service }}
@@ -343,3 +344,74 @@ jobs:
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/food-delivery-${{ matrix.service }}:latest
           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/food-delivery-${{ matrix.service }}:latest
           cache-to: type=inline
+      
+      - name: Push deploy logs to Loki
+        if: always()
+        continue-on-error: true
+        env:
+          LOKI_URL: ${{ secrets.GRAFANA_CLOUD_LOKI_URL }}
+          LOKI_USER: ${{ secrets.GRAFANA_CLOUD_USER }}
+          LOKI_API_KEY: ${{ secrets.GRAFANA_CLOUD_API_KEY }}
+        run: |
+          if [ -z "$LOKI_URL" ] || [ -z "$LOKI_API_KEY" ]; then
+            echo "⚠️  Loki not configured - skipping deploy logs"
+            exit 0
+          fi
+          
+          # Determine deploy status
+          if [ "${{ steps.docker-build.outcome }}" == "success" ]; then
+            DEPLOY_STATUS="success"
+            LEVEL="info"
+            MESSAGE="✅ Successfully deployed ${{ matrix.service }} to DockerHub"
+          else
+            DEPLOY_STATUS="failed"
+            LEVEL="error"
+            MESSAGE="❌ Failed to deploy ${{ matrix.service }} to DockerHub"
+          fi
+          
+          # Push deploy log to Loki
+          TIMESTAMP=$(date +%s)000000000
+          PAYLOAD="{\"streams\":[{\"stream\":{\"job\":\"github-actions\",\"repository\":\"$GITHUB_REPOSITORY\",\"branch\":\"$GITHUB_REF_NAME\",\"workflow\":\"$GITHUB_WORKFLOW\",\"run_id\":\"$GITHUB_RUN_ID\",\"service\":\"${{ matrix.service }}\",\"deploy_status\":\"$DEPLOY_STATUS\",\"level\":\"$LEVEL\",\"type\":\"deploy\"},\"values\":[[\"$TIMESTAMP\",\"$MESSAGE\"]]}]}"
+          
+          curl -s -X POST \
+            -H "Content-Type: application/json" \
+            -u "${LOKI_USER}:${LOKI_API_KEY}" \
+            -d "$PAYLOAD" \
+            "${LOKI_URL}" >/dev/null 2>&1 || true
+          
+          echo "📊 Deploy status pushed to Loki"
+      
+      - name: Push deploy metrics to Prometheus
+        if: always()
+        continue-on-error: true
+        env:
+          GRAFANA_CLOUD_URL: ${{ secrets.GRAFANA_CLOUD_PROM_URL }}
+          GRAFANA_CLOUD_USER: ${{ secrets.GRAFANA_CLOUD_USER }}
+          GRAFANA_CLOUD_API_KEY: ${{ secrets.GRAFANA_CLOUD_API_KEY }}
+        run: |
+          if [ -z "$GRAFANA_CLOUD_URL" ] || [ -z "$GRAFANA_CLOUD_API_KEY" ]; then
+            echo "⚠️  Prometheus not configured - skipping deploy metrics"
+            exit 0
+          fi
+          
+          # Set deploy status metric
+          if [ "${{ steps.docker-build.outcome }}" == "success" ]; then
+            DEPLOY_STATUS=1
+          else
+            DEPLOY_STATUS=0
+          fi
+          
+          TIMESTAMP=$(date +%s)000
+          
+          cat <<EOF > deploy-metrics.txt
+          # TYPE deploy_status gauge
+          deploy_status{repository="${GITHUB_REPOSITORY}",branch="${GITHUB_REF_NAME}",service="${{ matrix.service }}",commit="${GITHUB_SHA:0:7}"} ${DEPLOY_STATUS} ${TIMESTAMP}
+          EOF
+          
+          curl -s -X POST \
+            -u "${GRAFANA_CLOUD_USER}:${GRAFANA_CLOUD_API_KEY}" \
+            -H "Content-Type: text/plain" \
+            --data-binary @deploy-metrics.txt \
+            "${GRAFANA_CLOUD_URL}/api/v1/push" || true
+          
+          echo "📊 Deploy metrics pushed to Prometheus"
