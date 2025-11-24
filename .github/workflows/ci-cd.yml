@@ -100,23 +100,35 @@ jobs:
           
           # Parse test output and send to Loki
           if [ -f test-output.log ]; then
+            # Track current test suite type
+            CURRENT_SUITE="unknown"
+            
             while IFS= read -r line; do
               # Skip empty lines
               [ -z "$line" ] && continue
               
+              # Detect test suite type from separators
+              if echo "$line" | grep -q "UNIT TESTS"; then
+                CURRENT_SUITE="unit"
+                LEVEL="info"
+                TEST_TYPE="separator"
+              elif echo "$line" | grep -q "INTEGRATION TESTS"; then
+                CURRENT_SUITE="integration"
+                LEVEL="info"
+                TEST_TYPE="separator"
               # Determine log level and test type
-              if echo "$line" | grep -qE "FAIL.*test"; then
+              elif echo "$line" | grep -qE "FAIL.*test"; then
                 LEVEL="error"
-                TEST_TYPE="unit"
+                TEST_TYPE="test_file"
               elif echo "$line" | grep -qE "PASS.*test"; then
                 LEVEL="info"
-                TEST_TYPE="unit"
+                TEST_TYPE="test_file"
               elif echo "$line" | grep -q "✓"; then
                 LEVEL="info"
-                TEST_TYPE="passed"
+                TEST_TYPE="test_case"
               elif echo "$line" | grep -q "✕\|×"; then
                 LEVEL="error"
-                TEST_TYPE="failed"
+                TEST_TYPE="test_case"
               elif echo "$line" | grep -qE "Tests:|Test Suites:"; then
                 if echo "$line" | grep -q "failed"; then
                   LEVEL="error"
@@ -127,6 +139,9 @@ jobs:
               elif echo "$line" | grep -q "●"; then
                 LEVEL="error"
                 TEST_TYPE="error_detail"
+              elif echo "$line" | grep -qE "exit code:|Running"; then
+                LEVEL="debug"
+                TEST_TYPE="info"
               else
                 LEVEL="debug"
                 TEST_TYPE="log"
@@ -135,9 +150,9 @@ jobs:
               # Escape line for JSON
               LINE_ESCAPED=$(echo "$line" | sed 's/"/\\"/g' | sed "s/'/\\'/g" | sed 's/\\/\\\\/g')
               
-              # Create Loki JSON payload
+              # Create Loki JSON payload with suite type
               TIMESTAMP=$(date +%s)000000000
-              PAYLOAD="{\"streams\":[{\"stream\":{\"job\":\"github-actions\",\"repository\":\"$GITHUB_REPOSITORY\",\"branch\":\"$GITHUB_REF_NAME\",\"workflow\":\"$GITHUB_WORKFLOW\",\"run_id\":\"$GITHUB_RUN_ID\",\"level\":\"$LEVEL\",\"test_type\":\"$TEST_TYPE\"},\"values\":[[\"$TIMESTAMP\",\"$LINE_ESCAPED\"]]}]}"
+              PAYLOAD="{\"streams\":[{\"stream\":{\"job\":\"github-actions\",\"repository\":\"$GITHUB_REPOSITORY\",\"branch\":\"$GITHUB_REF_NAME\",\"workflow\":\"$GITHUB_WORKFLOW\",\"run_id\":\"$GITHUB_RUN_ID\",\"level\":\"$LEVEL\",\"test_type\":\"$TEST_TYPE\",\"suite\":\"$CURRENT_SUITE\"},\"values\":[[\"$TIMESTAMP\",\"$LINE_ESCAPED\"]]}]}"
               
               # Push to Loki
               curl -s -X POST \
