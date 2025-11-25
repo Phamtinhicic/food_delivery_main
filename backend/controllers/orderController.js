@@ -1,5 +1,5 @@
-import orderModel from "../models/orderModel.js";
-import userModel from "../models/userModel.js";
+import orderRepository from "../repositories/orderRepository.js";
+import userRepository from "../repositories/userRepository.js";
 import Stripe from "stripe";
 
 const stripeSecret = process.env.STRIPE_SECRET_KEY || "";
@@ -50,7 +50,7 @@ const placeOrder = async (req, res) => {
     });
 
     // Clear cart immediately (user committed to purchase)
-    await userModel.findByIdAndUpdate(req.body.userId, { cartData: {} });
+    await userRepository.updateCart(req.body.userId, {});
 
     return res.json({ success: true, session_url: session.url });
   } catch (error) {
@@ -78,8 +78,7 @@ const verifyOrder = async (req, res) => {
           stripeSessionId: session_id,
         };
         
-        const newOrder = new orderModel(orderData);
-        await newOrder.save();
+        const newOrder = await orderRepository.create(orderData);
         
         return res.json({ success: true, message: "Payment verified, order created", orderId: newOrder._id });
       }
@@ -96,7 +95,7 @@ const verifyOrder = async (req, res) => {
 // user orders for frontend
 const userOrders = async (req, res) => {
   try {
-    const orders = await orderModel.find({ userId: req.body.userId });
+    const orders = await orderRepository.findByUserId(req.body.userId);
     res.json({ success: true, data: orders });
   } catch (error) {
     console.log(error);
@@ -107,9 +106,9 @@ const userOrders = async (req, res) => {
 // Listing orders for admin panel and restaurant
 const listOrders = async (req, res) => {
   try {
-    const userData = await userModel.findById(req.body.userId);
+    const userData = await userRepository.findById(req.userId || req.body.userId);
     if (userData && (userData.role === "admin" || userData.role === "restaurant")) {
-      const orders = await orderModel.find({});
+      const orders = await orderRepository.findAll();
       res.json({ success: true, data: orders });
     } else {
       res.json({ success: false, message: "You are not authorized" });
@@ -123,11 +122,9 @@ const listOrders = async (req, res) => {
 // api for updating status (admin and restaurant can update)
 const updateStatus = async (req, res) => {
   try {
-    const userData = await userModel.findById(req.body.userId);
+    const userData = await userRepository.findById(req.userId || req.body.userId);
     if (userData && (userData.role === "admin" || userData.role === "restaurant")) {
-      await orderModel.findByIdAndUpdate(req.body.orderId, {
-        status: req.body.status,
-      });
+      await orderRepository.updateStatus(req.body.orderId, req.body.status);
       res.json({ success: true, message: "Status Updated Successfully" });
     } else {
       res.json({ success: false, message: "You are not authorized" });
@@ -141,9 +138,9 @@ const updateStatus = async (req, res) => {
 // api for cancelling order with reason (admin and restaurant can cancel)
 const cancelOrder = async (req, res) => {
   try {
-    const userData = await userModel.findById(req.body.userId);
+    const userData = await userRepository.findById(req.body.userId);
     if (userData && (userData.role === "admin" || userData.role === "restaurant")) {
-      await orderModel.findByIdAndUpdate(req.body.orderId, {
+      await orderRepository.update(req.body.orderId, {
         status: "Cancelled",
         cancelReason: req.body.reason || "No reason provided",
         cancelledAt: new Date(),
@@ -163,7 +160,7 @@ const cancelOrder = async (req, res) => {
 const confirmDelivery = async (req, res) => {
   try {
     const { orderId } = req.body;
-    const order = await orderModel.findById(orderId);
+    const order = await orderRepository.findById(orderId);
     
     if (!order) {
       return res.json({ success: false, message: "Order not found" });
@@ -180,7 +177,7 @@ const confirmDelivery = async (req, res) => {
     }
     
     // Update to Delivered
-    await orderModel.findByIdAndUpdate(orderId, {
+    await orderRepository.update(orderId, {
       status: "Delivered",
       deliveredAt: new Date()
     });
@@ -200,7 +197,7 @@ const captureStripeSession = async (req, res) => {
     if (!stripe) return res.status(500).json({ success: false, message: "Stripe not configured" });
     const session = await stripe.checkout.sessions.retrieve(sessionId);
     if (session && session.payment_status === "paid") {
-      await orderModel.findByIdAndUpdate(orderId, { payment: true });
+      await orderRepository.updatePayment(orderId, true);
       return res.json({ success: true, message: "Payment verified" });
     }
     return res.status(400).json({ success: false, message: "Payment not completed" });

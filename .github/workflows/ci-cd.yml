@@ -2,7 +2,7 @@ name: CI/CD
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
   pull_request:
     branches: [ main ]
 
@@ -25,6 +25,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -41,9 +43,12 @@ jobs:
 
       - name: Install backend dependencies
         working-directory: backend
-        run: npm ci --prefer-offline --no-audit
+        run: |
+          npm ci --prefer-offline --no-audit
+          echo "BUILD_START=$(date +%s)" >> $GITHUB_ENV
 
       - name: Run backend tests
+        id: run-tests
         working-directory: backend
         env:
           NODE_ENV: test
@@ -51,7 +56,206 @@ jobs:
           JWT_SECRET: test_secret_key_for_ci
           SALT: 10
           DEV_PAYMENT: true
-        run: npm test
+        run: |
+          set -o pipefail
+          
+          # Run unit tests (always continue even if failed)
+          echo "========== UNIT TESTS START =========="
+          npm run test:unit -- --verbose --no-coverage 2>&1 | tee test-output.log
+          UNIT_EXIT=$?
+          echo "========== UNIT TESTS END (exit: $UNIT_EXIT) =========="
+          
+          # Run integration tests (always run)
+          echo ""
+          echo "========== INTEGRATION TESTS START =========="
+          npm run test:integration -- --verbose --no-coverage 2>&1 | tee -a test-output.log
+          INTEGRATION_EXIT=$?
+          echo "========== INTEGRATION TESTS END (exit: $INTEGRATION_EXIT) =========="
+          
+          echo "TEST_END=$(date +%s)" >> $GITHUB_ENV
+          
+          # Report results
+          if [ $UNIT_EXIT -ne 0 ] || [ $INTEGRATION_EXIT -ne 0 ]; then
+            echo "❌ Tests failed - Unit: $UNIT_EXIT, Integration: $INTEGRATION_EXIT"
+            exit 1
+          fi
+          echo "✅ All tests passed"
+          
+      - name: Push test logs to Loki
+        if: always()
+        continue-on-error: true
+        working-directory: backend
+        env:
+          LOKI_URL: ${{ secrets.GRAFANA_CLOUD_LOKI_URL }}
+          LOKI_USER: ${{ secrets.GRAFANA_CLOUD_USER }}
+          LOKI_API_KEY: ${{ secrets.GRAFANA_CLOUD_API_KEY }}
+        run: |
+          if [ -z "$LOKI_URL" ] || [ -z "$LOKI_API_KEY" ]; then
+            echo "⚠️  Loki not configured - skipping logs push"
+            echo "   Add these secrets: GRAFANA_CLOUD_LOKI_URL, GRAFANA_CLOUD_USER, GRAFANA_CLOUD_API_KEY"
+            exit 0
+          fi
+          
+          echo "📝 Pushing test logs to Loki..."
+          
+          # Parse test output and send to Loki
+          if [ -f test-output.log ]; then
+            # Track current test suite type
+            CURRENT_SUITE="unknown"
+            
+            while IFS= read -r line; do
+              # Skip empty lines
+              [ -z "$line" ] && continue
+              
+              # Detect test suite type from separators or test files
+              if echo "$line" | grep -q "UNIT TESTS"; then
+                CURRENT_SUITE="unit"
+                LEVEL="info"
+                TEST_TYPE="separator"
+              elif echo "$line" | grep -q "INTEGRATION TESTS"; then
+                CURRENT_SUITE="integration"
+                LEVEL="info"
+                TEST_TYPE="separator"
+              elif echo "$line" | grep -q "unit\.test\.js"; then
+                CURRENT_SUITE="unit"
+              elif echo "$line" | grep -q "integration\.test\.js"; then
+                CURRENT_SUITE="integration"
+              fi
+              
+              # Determine log level and test type
+              if echo "$line" | grep -qE "FAIL.*test"; then
+                LEVEL="error"
+                TEST_TYPE="test_file"
+              elif echo "$line" | grep -qE "PASS.*test"; then
+                LEVEL="info"
+                TEST_TYPE="test_file"
+              elif echo "$line" | grep -q "✓"; then
+                LEVEL="info"
+                TEST_TYPE="test_case"
+              elif echo "$line" | grep -q "✕\|×"; then
+                LEVEL="error"
+                TEST_TYPE="test_case"
+              elif echo "$line" | grep -qE "Tests:|Test Suites:"; then
+                if echo "$line" | grep -q "failed"; then
+                  LEVEL="error"
+                else
+                  LEVEL="info"
+                fi
+                TEST_TYPE="summary"
+              elif echo "$line" | grep -q "●"; then
+                LEVEL="error"
+                TEST_TYPE="error_detail"
+              elif echo "$line" | grep -qE "exit code:|Running"; then
+                LEVEL="debug"
+                TEST_TYPE="info"
+              else
+                LEVEL="debug"
+                TEST_TYPE="log"
+              fi
+              
+              # Escape line for JSON
+              LINE_ESCAPED=$(echo "$line" | sed 's/"/\\"/g' | sed "s/'/\\'/g" | sed 's/\\/\\\\/g')
+              
+              # Create Loki JSON payload with suite type
+              TIMESTAMP=$(date +%s)000000000
+              PAYLOAD="{\"streams\":[{\"stream\":{\"job\":\"github-actions\",\"repository\":\"$GITHUB_REPOSITORY\",\"branch\":\"$GITHUB_REF_NAME\",\"workflow\":\"$GITHUB_WORKFLOW\",\"run_id\":\"$GITHUB_RUN_ID\",\"level\":\"$LEVEL\",\"test_type\":\"$TEST_TYPE\",\"suite\":\"$CURRENT_SUITE\"},\"values\":[[\"$TIMESTAMP\",\"$LINE_ESCAPED\"]]}]}"
+              
+              # Push to Loki
+              curl -s -X POST \
+                -H "Content-Type: application/json" \
+                -u "${LOKI_USER}:${LOKI_API_KEY}" \
+                -d "$PAYLOAD" \
+                "${LOKI_URL}" >/dev/null 2>&1 || true
+              
+            done < test-output.log
+            
+            echo "✅ Test logs pushed to Loki!"
+          fi
+
+      - name: Calculate CI/CD metrics
+        id: metrics
+        if: always()
+        run: |
+          BUILD_END=$(date +%s)
+          BUILD_DURATION=$((BUILD_END - BUILD_START))
+          TEST_DURATION=$((TEST_END - BUILD_START))
+          COMMITS=$(git rev-list --count HEAD)
+          FILES_CHANGED=$(git diff-tree --no-commit-id --name-only -r HEAD | wc -l)
+          LINES_ADDED=$(git diff HEAD~1 HEAD --numstat | awk '{sum+=$1} END {print sum+0}')
+          LINES_REMOVED=$(git diff HEAD~1 HEAD --numstat | awk '{sum+=$2} END {print sum+0}')
+          
+          echo "build_duration=$BUILD_DURATION" >> $GITHUB_OUTPUT
+          echo "test_duration=$TEST_DURATION" >> $GITHUB_OUTPUT
+          echo "commits=$COMMITS" >> $GITHUB_OUTPUT
+          echo "files_changed=$FILES_CHANGED" >> $GITHUB_OUTPUT
+          echo "lines_added=$LINES_ADDED" >> $GITHUB_OUTPUT
+          echo "lines_removed=$LINES_REMOVED" >> $GITHUB_OUTPUT
+
+      - name: Push metrics to Grafana Cloud
+        if: always()
+        continue-on-error: true
+        env:
+          GRAFANA_CLOUD_URL: ${{ secrets.GRAFANA_CLOUD_PROM_URL }}
+          GRAFANA_CLOUD_USER: ${{ secrets.GRAFANA_CLOUD_USER }}
+          GRAFANA_CLOUD_API_KEY: ${{ secrets.GRAFANA_CLOUD_API_KEY }}
+        run: |
+          # Skip if Grafana Cloud not configured
+          if [ -z "$GRAFANA_CLOUD_URL" ] || [ -z "$GRAFANA_CLOUD_API_KEY" ]; then
+            echo "⚠️  Grafana Cloud not configured - skipping metrics push"
+            echo "   Add these secrets to enable:"
+            echo "   - GRAFANA_CLOUD_PROM_URL"
+            echo "   - GRAFANA_CLOUD_USER (your instance ID, e.g., 123456)"
+            echo "   - GRAFANA_CLOUD_API_KEY"
+            exit 0
+          fi
+          
+          echo "📊 Pushing CI/CD metrics to Grafana Cloud..."
+          
+          # Check if tests passed or failed
+          if [ "${{ steps.run-tests.outcome }}" == "success" ]; then
+            BUILD_STATUS=1
+            TEST_STATUS=1
+          else
+            BUILD_STATUS=0
+            TEST_STATUS=0
+          fi
+          
+          # Create Prometheus remote write format
+          TIMESTAMP=$(date +%s)000  # milliseconds
+          
+          cat <<EOF > metrics.txt
+          # TYPE cicd_build_status gauge
+          cicd_build_status{repository="${GITHUB_REPOSITORY}",branch="${GITHUB_REF_NAME}",commit="${GITHUB_SHA:0:7}"} ${BUILD_STATUS} ${TIMESTAMP}
+          # TYPE cicd_test_status gauge
+          cicd_test_status{repository="${GITHUB_REPOSITORY}",branch="${GITHUB_REF_NAME}"} ${TEST_STATUS} ${TIMESTAMP}
+          # TYPE cicd_build_duration_seconds gauge
+          cicd_build_duration_seconds{repository="${GITHUB_REPOSITORY}",branch="${GITHUB_REF_NAME}"} ${{ steps.metrics.outputs.build_duration }} ${TIMESTAMP}
+          # TYPE cicd_test_duration_seconds gauge
+          cicd_test_duration_seconds{repository="${GITHUB_REPOSITORY}",branch="${GITHUB_REF_NAME}"} ${{ steps.metrics.outputs.test_duration }} ${TIMESTAMP}
+          # TYPE cicd_total_commits gauge
+          cicd_total_commits{repository="${GITHUB_REPOSITORY}",branch="${GITHUB_REF_NAME}"} ${{ steps.metrics.outputs.commits }} ${TIMESTAMP}
+          # TYPE cicd_files_changed gauge
+          cicd_files_changed{repository="${GITHUB_REPOSITORY}",branch="${GITHUB_REF_NAME}"} ${{ steps.metrics.outputs.files_changed }} ${TIMESTAMP}
+          # TYPE cicd_lines_added gauge
+          cicd_lines_added{repository="${GITHUB_REPOSITORY}",branch="${GITHUB_REF_NAME}"} ${{ steps.metrics.outputs.lines_added }} ${TIMESTAMP}
+          # TYPE cicd_lines_removed gauge
+          cicd_lines_removed{repository="${GITHUB_REPOSITORY}",branch="${GITHUB_REF_NAME}"} ${{ steps.metrics.outputs.lines_removed }} ${TIMESTAMP}
+          EOF
+          
+          # Push to Grafana Cloud using Prometheus format
+          # Note: Grafana Cloud accepts both remote write (protobuf) and text format
+          # Using text format for simplicity
+          curl -X POST \
+            -u "${GRAFANA_CLOUD_USER}:${GRAFANA_CLOUD_API_KEY}" \
+            -H "Content-Type: text/plain" \
+            --data-binary @metrics.txt \
+            "${GRAFANA_CLOUD_URL}/api/v1/push" || {
+              echo "❌ Failed to push metrics"
+              cat metrics.txt
+              exit 0
+            }
+          
+          echo "✅ Metrics pushed to Grafana Cloud successfully!"
 
   # Build Frontend Services
   build:
@@ -131,6 +335,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       
       - name: Build and push Docker image
+        id: docker-build
         uses: docker/build-push-action@v5
         with:
           context: ./${{ matrix.service }}
@@ -139,3 +344,74 @@ jobs:
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/food-delivery-${{ matrix.service }}:latest
           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/food-delivery-${{ matrix.service }}:latest
           cache-to: type=inline
+      
+      - name: Push deploy logs to Loki
+        if: always()
+        continue-on-error: true
+        env:
+          LOKI_URL: ${{ secrets.GRAFANA_CLOUD_LOKI_URL }}
+          LOKI_USER: ${{ secrets.GRAFANA_CLOUD_USER }}
+          LOKI_API_KEY: ${{ secrets.GRAFANA_CLOUD_API_KEY }}
+        run: |
+          if [ -z "$LOKI_URL" ] || [ -z "$LOKI_API_KEY" ]; then
+            echo "⚠️  Loki not configured - skipping deploy logs"
+            exit 0
+          fi
+          
+          # Determine deploy status
+          if [ "${{ steps.docker-build.outcome }}" == "success" ]; then
+            DEPLOY_STATUS="success"
+            LEVEL="info"
+            MESSAGE="✅ Successfully deployed ${{ matrix.service }} to DockerHub"
+          else
+            DEPLOY_STATUS="failed"
+            LEVEL="error"
+            MESSAGE="❌ Failed to deploy ${{ matrix.service }} to DockerHub"
+          fi
+          
+          # Push deploy log to Loki
+          TIMESTAMP=$(date +%s)000000000
+          PAYLOAD="{\"streams\":[{\"stream\":{\"job\":\"github-actions\",\"repository\":\"$GITHUB_REPOSITORY\",\"branch\":\"$GITHUB_REF_NAME\",\"workflow\":\"$GITHUB_WORKFLOW\",\"run_id\":\"$GITHUB_RUN_ID\",\"service\":\"${{ matrix.service }}\",\"deploy_status\":\"$DEPLOY_STATUS\",\"level\":\"$LEVEL\",\"type\":\"deploy\"},\"values\":[[\"$TIMESTAMP\",\"$MESSAGE\"]]}]}"
+          
+          curl -s -X POST \
+            -H "Content-Type: application/json" \
+            -u "${LOKI_USER}:${LOKI_API_KEY}" \
+            -d "$PAYLOAD" \
+            "${LOKI_URL}" >/dev/null 2>&1 || true
+          
+          echo "📊 Deploy status pushed to Loki"
+      
+      - name: Push deploy metrics to Prometheus
+        if: always()
+        continue-on-error: true
+        env:
+          GRAFANA_CLOUD_URL: ${{ secrets.GRAFANA_CLOUD_PROM_URL }}
+          GRAFANA_CLOUD_USER: ${{ secrets.GRAFANA_CLOUD_USER }}
+          GRAFANA_CLOUD_API_KEY: ${{ secrets.GRAFANA_CLOUD_API_KEY }}
+        run: |
+          if [ -z "$GRAFANA_CLOUD_URL" ] || [ -z "$GRAFANA_CLOUD_API_KEY" ]; then
+            echo "⚠️  Prometheus not configured - skipping deploy metrics"
+            exit 0
+          fi
+          
+          # Set deploy status metric
+          if [ "${{ steps.docker-build.outcome }}" == "success" ]; then
+            DEPLOY_STATUS=1
+          else
+            DEPLOY_STATUS=0
+          fi
+          
+          TIMESTAMP=$(date +%s)000
+          
+          cat <<EOF > deploy-metrics.txt
+          # TYPE deploy_status gauge
+          deploy_status{repository="${GITHUB_REPOSITORY}",branch="${GITHUB_REF_NAME}",service="${{ matrix.service }}",commit="${GITHUB_SHA:0:7}"} ${DEPLOY_STATUS} ${TIMESTAMP}
+          EOF
+          
+          curl -s -X POST \
+            -u "${GRAFANA_CLOUD_USER}:${GRAFANA_CLOUD_API_KEY}" \
+            -H "Content-Type: text/plain" \
+            --data-binary @deploy-metrics.txt \
+            "${GRAFANA_CLOUD_URL}/api/v1/push" || true
+          
+          echo "📊 Deploy metrics pushed to Prometheus"
