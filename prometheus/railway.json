@@ -1,5 +1,0 @@
-# Railway Configuration for Prometheus
-# Đặt file này trong thư mục prometheus/ nếu deploy Prometheus riêng lẻ
-
-# Railway sẽ tự động detect và sử dụng Dockerfile
-# Port mặc định: 9090
