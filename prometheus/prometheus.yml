@@ -1,0 +1,28 @@
+# Prometheus Configuration for Food Delivery System
+global:
+  scrape_interval: 15s # Scrape metrics every 15 seconds
+  evaluation_interval: 15s # Evaluate rules every 15 seconds
+  external_labels:
+    monitor: 'food-delivery-monitor'
+    environment: 'production'
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Backend Node.js application
+  - job_name: 'backend'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['backend:5000']  # Internal Docker network
+    # Nếu deploy trên Railway, uncomment dòng dưới và thay bằng URL backend của bạn
+    # static_configs:
+    #   - targets: ['your-backend.up.railway.app']
+    #     labels:
+    #       service: 'backend'
+    #       environment: 'production'
