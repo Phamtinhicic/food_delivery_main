@@ -13,16 +13,14 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
 
-  # Backend Node.js application
+  # Backend Node.js application (Railway deployment)
   - job_name: 'backend'
     scrape_interval: 10s
     scrape_timeout: 5s
     metrics_path: '/metrics'
+    scheme: 'https'  # Railway uses HTTPS
     static_configs:
-      - targets: ['backend:5000']  # Internal Docker network
-    # Nếu deploy trên Railway, uncomment dòng dưới và thay bằng URL backend của bạn
-    # static_configs:
-    #   - targets: ['your-backend.up.railway.app']
-    #     labels:
-    #       service: 'backend'
-    #       environment: 'production'
+      - targets: ['backend-production-c9bf.up.railway.app']
+        labels:
+          service: 'backend'
+          environment: 'production'
