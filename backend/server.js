@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import pino from 'pino';
 import pinoHttp from 'pino-http';
+import client from 'prom-client';
 import { connectDB } from "./config/db.js";
 import foodRouter from "./routes/foodRoute.js";
 import userRouter from "./routes/userRoute.js";
@@ -13,6 +14,25 @@ import orderRouter from "./routes/orderRoute.js";
 const app = express();
 const port = process.env.PORT || 4000;
 
+// Prometheus metrics setup
+const register = new client.Registry();
+client.collectDefaultMetrics({ register });
+
+const httpRequestDuration = new client.Histogram({
+  name: 'http_request_duration_seconds',
+  help: 'Duration of HTTP requests in seconds',
+  labelNames: ['method', 'route', 'status_code'],
+  buckets: [0.005, 0.01, 0.05, 0.1, 0.3, 0.5, 1, 2, 5],
+  registers: [register]
+});
+
+const httpRequestTotal = new client.Counter({
+  name: 'http_requests_total',
+  help: 'Total number of HTTP requests',
+  labelNames: ['method', 'route', 'status_code'],
+  registers: [register]
+});
+
 //middlewares
 // We still use express.json for most routes, but Stripe requires the raw body for webhook signature verification.
 // The webhook route below will use bodyParser.raw({type: 'application/json'})
@@ -22,6 +42,19 @@ app.use(express.json());
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 const loggerMiddleware = pinoHttp({ logger });
 app.use(loggerMiddleware);
+
+// Prometheus metrics middleware
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const route = req.route ? req.route.path : req.path;
+    const duration = (Date.now() - start) / 1000;
+    const labels = { method: req.method, route, status_code: res.statusCode };
+    httpRequestDuration.labels(labels).observe(duration);
+    httpRequestTotal.inc(labels);
+  });
+  next();
+});
 
 // CORS configuration - allow frontend domains
 const corsOptions = {
@@ -66,6 +99,16 @@ app.get("/health", (req, res) => {
 
 app.get("/healthz", (req, res) => {
   res.status(200).json({ status: "ok", message: "Server is healthy" });
+});
+
+// Metrics endpoint for Prometheus scraping
+app.get("/metrics", async (req, res) => {
+  try {
+    res.set('Content-Type', register.contentType);
+    res.end(await register.metrics());
+  } catch (error) {
+    res.status(500).end(error);
+  }
 });
 
 // Only start server if not in test environment  
