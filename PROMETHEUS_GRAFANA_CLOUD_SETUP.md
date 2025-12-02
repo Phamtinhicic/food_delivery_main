@@ -6,6 +6,7 @@ Hệ thống monitoring gồm:
 - **Prometheus**: Thu thập metrics từ backend (chạy trên Railway)
 - **Grafana Cloud**: Hiển thị dashboard và visualization (FREE tier)
 - **Backend**: Đã tích hợp prom-client để expose metrics
+- **CI/CD**: Tự động test và deploy khi có thay đổi
 
 ---
 
