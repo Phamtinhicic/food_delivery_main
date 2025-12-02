@@ -28,7 +28,7 @@ describe('Cart Controller', () => {
 
     await addToCart(req, res);
 
-    expect(mockUserRepository.updateCart).toHaveBeenCalledWith('user123', { food123: 1 });
+    expect(mockUserRepository.updateCart).toHaveBeenCalledWith('user123', { food123: 2 }); // Changed from 1 to 2 - will FAIL
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
   });
 
